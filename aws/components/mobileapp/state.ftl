@@ -19,6 +19,13 @@
                 environmentName
             )
     ]
+
+    [#local exportMethod =
+        getOccurrenceSettingValue(occurrence, "IOS_DIST_EXPORT_METHOD", true)?has_content?then(
+            getOccurrenceSettingValue(occurrence, "IOS_DIST_EXPORT_METHOD", true),
+            "app-store"
+        )
+    ]
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "OpsData" ] )]
     [#local baselineComponentIds = getBaselineComponentIds(baselineLinks)]
@@ -72,6 +79,7 @@
             "Attributes" : {
                 "ENGINE" : solution.Engine,
                 "RELEASE_CHANNEL" : releaseChannel,
+                "IOS_DIST_EXPORT_METHOD" : exportMethod,
                 "OTA_ARTEFACT_BUCKET" : otaBucket,
                 "OTA_ARTEFACT_PREFIX" : otaPrefix,
                 "OTA_ARTEFACT_URL" : otaURL,
@@ -84,5 +92,3 @@
         }
     ]
 [/#macro]
-
-
