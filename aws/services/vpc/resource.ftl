@@ -243,6 +243,20 @@
         trafficType /]
 [/#macro]
 
+[#assign VPC_OUTPUT_MAPPINGS =
+    {
+        REFERENCE_ATTRIBUTE_TYPE : {
+            "UseRef" : true,
+            "Export" : true
+        }
+    }
+]
+[@addOutputMapping
+    provider=AWS_PROVIDER
+    resourceType=AWS_VPC_RESOURCE_TYPE
+    mappings=VPC_OUTPUT_MAPPINGS
+/]
+
 [#macro createVPC
             id
             name
@@ -262,6 +276,7 @@
                 "EnableDnsHostnames" : dnsHostnames
             }
         tags=getCfTemplateCoreTags(name)
+        outputs=VPC_OUTPUT_MAPPINGS
         outputId=id
     /]
 [/#macro]
