@@ -169,16 +169,18 @@
                 [/#list]
 
                 [#local tierListId = formatId( "subnetList", core.Id, tierId) ]
-                [@cfOutput
-                        tierListId,
-                        {
-                            "Fn::Join": [
-                                ",",
-                                tierSubnetIdRefs
-                            ]
-                        },
-                        true
-                /]
+                [#if deploymentSubsetRequired(NETWORK_COMPONENT_TYPE, true)]
+                    [@cfOutput
+                            tierListId,
+                            {
+                                "Fn::Join": [
+                                    ",",
+                                    tierSubnetIdRefs
+                                ]
+                            },
+                            true
+                    /]
+                [/#if]
 
             [/#if]
         [/#list]
