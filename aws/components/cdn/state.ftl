@@ -76,7 +76,7 @@
                 }
             },
             "Attributes" : parentAttributes + {
-                "URL" : formatAbsolutePath( parentAttributes["URL"], pathPattern?remove_ending("*") )
+                "URL" : formatRelativePath( parentAttributes["URL"], pathPattern?remove_ending("*") )
             },
             "Roles" : {
                 "Inbound" : {},
