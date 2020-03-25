@@ -14,6 +14,9 @@
                 [#case AWS_WAF_BYTE_MATCH_CONDITION_TYPE]
                     [#local result += formatWAFByteMatchTuples(filter, valueSet) ]
                     [#break]
+                [#case AWS_WAF_GEO_MATCH_CONDITION_TYPE]
+                    [#local result += formatWAFGeoMatchTuples(filter, valueSet) ]
+                    [#break]
                 [#case AWS_WAF_IP_MATCH_CONDITION_TYPE]
                     [#local result += formatWAFIPMatchTuples(filter, valueSet) ]
                     [#break]
@@ -47,6 +50,18 @@
         name=name
         type=AWS_WAF_BYTE_MATCH_CONDITION_TYPE
         filters=matches
+        valueSet=valueSet
+        regional=regional /]
+[/#macro]
+
+[#macro createWAFGeoMatchSetCondition id name countryCodes=[] regional=true]
+    [#local filters = [{"Targets" : "countrycodes"}] ]
+    [#local valueSet = {"countrycodes" : asFlattenedArray(countryCodes) } ]
+    [@createWAFCondition
+        id=id
+        name=name
+        type=AWS_WAF_GEO_MATCH_CONDITION_TYPE
+        filters=filters
         valueSet=valueSet
         regional=regional /]
 [/#macro]
@@ -228,11 +243,47 @@
                     wafProfile.Rules +
                     [
                         {
-                        "Rule" : "whitelist",
+                        "Rule" : "whitelistips",
                         "Action" : "ALLOW"
                         }
                     ],
                 "DefaultAction" : "BLOCK"
+            } ]
+    [/#if]
+
+    [#local whitelistedCountryCodes = getGroupCountryCodes(wafSolution.CountryGroups, false) ]
+    [#if whitelistedCountryCodes?has_content]
+        [#local wafValueSet += {
+                "whitelistedcountrycodes" : whitelistedCountryCodes
+            } ]
+        [#local wafProfile += {
+                "Rules" :
+                    wafProfile.Rules +
+                    [
+                        {
+                        "Rule" : "whitelistcountries",
+                        "Action" : "ALLOW"
+                        }
+                    ],
+                "DefaultAction" : "BLOCK"
+            } ]
+    [/#if]
+
+    [#local blacklistedCountryCodes = getGroupCountryCodes(wafSolution.CountryGroups, true) ]
+    [#if blacklistedCountryCodes?has_content]
+        [#local wafValueSet += {
+                "blacklistedcountrycodes" : blacklistedCountryCodes
+            } ]
+        [#local wafProfile += {
+                "Rules" :
+                    wafProfile.Rules +
+                    [
+                        {
+                        "Rule" : "blacklistcountries",
+                        "Action" : "BLOCK"
+                        }
+                    ],
+                "DefaultAction" : "ALLOW"
             } ]
     [/#if]
 

@@ -351,15 +351,14 @@
 
     [#if deploymentSubsetRequired(CDN_COMPONENT_TYPE, true)]
         [#local restrictions = {} ]
-        [#if solution.CountryGroups?has_content]
-            [#list asArray(solution.CountryGroups) as countryGroup]
-                [#local group = (countryGroups[countryGroup])!{}]
-                [#if group.Locations?has_content]
-                    [#local restrictions +=
-                        getCFGeoRestriction(group.Locations, group.Blacklist!false) ]
-                    [#break]
-                [/#if]
-            [/#list]
+        [#local whitelistedCountryCodes = getGroupCountryCodes(solution.CountryGroups![], false) ]
+        [#if whitelistedCountryCodes?has_content]
+            [#local restrictions = getCFGeoRestriction(whitelistedCountryCodes, false) ]
+        [#else]
+            [#local blacklistedCountryCodes = getGroupCountryCodes(solution.CountryGroups![], true) ]
+            [#if blacklistedCountryCodes?has_content]
+                [#local restrictions = getCFGeoRestriction(blacklistedCountryCodes, true) ]
+            [/#if]
         [/#if]
 
         [#local errorResponses = []]
