@@ -54,7 +54,13 @@
             "TemplateURL" : tempalteUrl,
             "Tags" : tags
         }
-        outputs=outputs
+        outputs=
+            {
+                REFERENCE_ATTRIBUTE_TYPE : {
+                    "UseRef" : true
+                }
+            } +
+            outputs
         dependencies=dependencies
     /]
 [/#macro]
