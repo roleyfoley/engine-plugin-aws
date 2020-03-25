@@ -399,16 +399,16 @@
                     solution.CloudFront.Compress,
                     securityProfile.ProtocolPolicy) ]
             [#local restrictions = {} ]
-            [#if solution.CloudFront.CountryGroups?has_content]
-                [#list asArray(solution.CloudFront.CountryGroups) as countryGroup]
-                    [#local group = (countryGroups[countryGroup])!{}]
-                    [#if group.Locations?has_content]
-                        [#local restrictions +=
-                            getCFGeoRestriction(group.Locations, group.Blacklist!false) ]
-                        [#break]
-                    [/#if]
-                [/#list]
+            [#local whitelistedCountryCodes = getGroupCountryCodes(solution.CloudFront.CountryGroups![], false) ]
+            [#if whitelistedCountryCodes?has_content]
+                [#local restrictions = getCFGeoRestriction(whitelistedCountryCodes, false) ]
+            [#else]
+                [#local blacklistedCountryCodes = getGroupCountryCodes(solution.CloudFront.CountryGroups![], true) ]
+                [#if blacklistedCountryCodes?has_content]
+                    [#local restrictions = getCFGeoRestriction(blacklistedCountryCodes, true) ]
+                [/#if]
             [/#if]
+
             [@createCFDistribution
                 id=cfResources["distribution"].Id
                 dependencies=stageId
