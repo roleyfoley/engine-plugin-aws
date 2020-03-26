@@ -12,7 +12,7 @@
         [#local attributes = mergeObjects(
                                 attributes,
                                 {
-                                    attribute.AttributeType?upper_case : getExistingReference(templateId, solution.AttributeType)
+                                    attribute.AttributeType?upper_case : getExistingReference(templateId, attribute.AttributeType)
                                 } )]
     [/#list]
 
