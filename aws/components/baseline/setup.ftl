@@ -250,10 +250,19 @@
                                     {
                                         "CanonicalUser": cfAccessCanonicalIds
                                     }
-                                )
+                                ) +
+                                s3ListPermission(
+                                    bucketName,
+                                    formatSegmentPrefixPath("settings"),
+                                    "*",
+                                    {
+                                        "CanonicalUser": cfAccessCanonicalIds
+                                    }
+                                ),
                                 cfAccessCanonicalIds,
                                 []
-                            )]
+                            )
+                        ]
                         [#break]
                     [#case "appdata" ]
                         [#if dataPublicEnabled ]
