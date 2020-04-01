@@ -380,7 +380,7 @@
                     [#local resourceDimensions = [
                         {
                             "Name": "DBInstanceIdentifier",
-                            "Value": getExistingReference(rdsId)
+                            "Value": rdsFullName
                         }
                     ]]
                 [#else]
