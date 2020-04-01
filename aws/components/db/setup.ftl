@@ -375,7 +375,8 @@
                 [@debug message="Monitored resource" context=monitoredResource enabled=false /]
 
                 [#-- when replacing the instance the database is removed so we need to override refrences to keep the alarms around --]
-                [#if monitoredResource.Id == rdsId && (commandLineOptions.Deployment.Unit.Alternative!"") == "replace1" ]
+                [#if monitoredResource.Id == rdsId &&
+                        ((commandLineOptions.Deployment.Unit.Alternative!"") == "replace1" || hibernate ) ]
                     [#local resourceDimensions = [
                         {
                             "Name": "DBInstanceIdentifier",
