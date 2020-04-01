@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Run AWS Template Tests') {
             agent {
-                label 'codeontaplatest'
+                label 'hamlet-latest'
             }
             environment {
                 GENERATION_PLUGIN_DIRS="${WORKSPACE}"
