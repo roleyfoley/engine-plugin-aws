@@ -7,4 +7,5 @@
 [#assign AWS_COGNITO_IDENTITYPOOL_ROLEMAPPING_RESOURCE_TYPE = "rolemapping"]
 [#assign AWS_COGNITO_USERPOOL_DOMAIN_RESOURCE_TYPE = "userpooldomain" ]
 [#assign AWS_COGNITO_USERPOOL_AUTHPROVIDER_RESOURCE_TYPE = "userpoolauthprovider" ]
-
+[#assign AWS_COGNITO_USERPOOL_RESOURCESERVER_RESOURCE_TYPE = "userpoolresourceserver"]
+[#assign AWS_COGNITO_USERPOOL_RESOURCESCOPE_RESOURCE_TYPE = "userpoolresourcescope" ]

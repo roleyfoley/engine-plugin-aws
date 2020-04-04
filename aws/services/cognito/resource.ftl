@@ -23,9 +23,34 @@
 [#assign USERPOOL_CLIENT_OUTPUT_MAPPINGS =
     {
         REFERENCE_ATTRIBUTE_TYPE : {
-            "UserRef" : true
+            "UseRef" : true
         }
     }
+]
+
+[#assign USERPOOL_AUTHPROVIDER_OUTPUT_MAPPINGS =
+    {
+        REFERENCE_ATTRIBUTE_TYPE : {
+            "UseRef" : true
+        }
+    }
+]
+
+[#assign USERPOOL_DOMAIN_OUTPUT_MAPPINGS =
+    {
+        REFERENCE_ATTRIBUTE_TYPE : {
+            "UseRef" : true
+        }
+    }
+]
+
+[#assign USERPOOL_RESOURCESERVER_OUTPUT_MAPPINGS =
+    {
+        REFERENCE_ATTRIBUTE_TYPE : {
+            "UseRef" : true
+        }
+    }
+
 ]
 
 [#assign IDENTITYPOOL_OUTPUT_MAPPINGS =
@@ -43,12 +68,15 @@
     {
         AWS_COGNITO_USERPOOL_RESOURCE_TYPE : USERPOOL_OUTPUT_MAPPINGS,
         AWS_COGNITO_USERPOOL_CLIENT_RESOURCE_TYPE : USERPOOL_CLIENT_OUTPUT_MAPPINGS,
+        AWS_COGNITO_USERPOOL_AUTHPROVIDER_RESOURCE_TYPE: USERPOOL_AUTHPROVIDER_OUTPUT_MAPPINGS,
+        AWS_COGNITO_USERPOOL_DOMAIN_RESOURCE_TYPE : USERPOOL_DOMAIN_OUTPUT_MAPPINGS,
+        AWS_COGNITO_USERPOOL_RESOURCESERVER_RESOURCE_TYPE : USERPOOL_RESOURCESERVER_OUTPUT_MAPPINGS,
         AWS_COGNITO_IDENTITYPOOL_RESOURCE_TYPE : IDENTITYPOOL_OUTPUT_MAPPINGS
     }
 ]
 
 [#list cogniitoMappings as type, mappings]
-    [@addOutputMapping 
+    [@addOutputMapping
         provider=AWS_PROVIDER
         resourceType=type
         mappings=mappings
@@ -196,6 +224,10 @@
     mfa
     adminCreatesUser
     tags
+    userDeviceTracking={}
+    userActivityTracking=""
+    userAccountRecovery=true
+    usernameConfig={}
     smsVerificationMessage=""
     emailVerificationMessage=""
     emailVerificationSubject=""
@@ -203,6 +235,7 @@
     emailInviteMessage=""
     emailInviteSubject=""
     smsAuthenticationMessage=""
+    mfaMethods=[]
     tier=""
     component=""
     loginAliases=[]
@@ -223,6 +256,57 @@
         ]
     [/#list]
 
+    [#local enabledMfas = []]
+    [#list mfaMethods as mfaMethod ]
+        [#switch mfaMethod ]
+            [#case "SMS" ]
+                [#local enabledMfas = combineEntities(
+                                            enabledMfas,
+                                            "SMS_MFA",
+                                            UNIQUE_COMBINE_BEHAVIOUR
+                )]
+                [#break]
+
+            [#case "SoftwareToken" ]
+                [#local enabledMfas = combineEntities(
+                                            enabledMfas,
+                                            "SOFTWARE_TOKEN_MFA",
+                                            UNIQUE_COMBINE_BEHAVIOUR
+                )]
+                [#break]
+        [/#switch]
+    [/#list]
+
+    [#local accountRecoveryMethods = []]
+
+    [#if userAccountRecovery ]
+        [#list schema as value ]
+            [#if value.Name == "email" ]
+                [#local accountRecoveryMethods += [
+                     {
+                        "Name" : "verified_email",
+                        "Priority" : 1
+                    }]]
+            [/#if]
+
+            [#if value.Name == "phone_number" && ! mfaMethods?seq_contains("SMS") ]
+                [#local accountRecoveryMethods += [
+                     {
+                        "Name" : "verified_phone_number",
+                        "Priority" : 2
+                    }]]
+            [/#if]
+        [/#list]
+    [#else]
+        [#local accountRecoveryMethods += [
+            {
+                "Name" : "admin_only",
+                "Priority" : 1
+            }
+        ]]
+
+    [/#if]
+
     [@cfResource
         id=id
         type="AWS::Cognito::UserPool"
@@ -231,12 +315,23 @@
                 "UserPoolName" : name,
                 "UserPoolTags" : tagMap,
                 "MfaConfiguration" : mfa,
-                "AdminCreateUserConfig" : getUserPoolAdminCreateUserConfig(
-                                                adminCreatesUser,
-                                                getUserPoolInviteMessageTemplate(
-                                                    emailInviteMessage,
-                                                    emailInviteSubject,
-                                                    smsInviteMessage))
+                "AdminCreateUserConfig" :
+                    getUserPoolAdminCreateUserConfig(
+                        adminCreatesUser,
+                        getUserPoolInviteMessageTemplate(
+                            emailInviteMessage,
+                            emailInviteSubject,
+                            smsInviteMessage)),
+                "AccountRecoverySetting" : {
+                    "RecoveryMechanisms" : accountRecoveryMethods
+                },
+                "UserPoolAddOns" : {
+                    "AdvancedSecurityMode" :
+                            ( userActivityTracking == "disabled" )?then(
+                                "OFF",
+                                userActivityTracking?upper_case
+                            )
+                }
             } +
             attributeIfContent(
                 "Policies",
@@ -277,6 +372,26 @@
              attributeIfContent (
                 "LambdaConfig",
                 lambdaTriggers
+             ) +
+             attributeIfTrue(
+                "EnabledMfas",
+                ( mfa == "OPTIONAL" || mfa == "ON" ),
+                enabledMfas
+             ) +
+             attributeIfTrue(
+                "UsernameConfiguration",
+                ( ! usernameConfig.CaseSensitive ),
+                {
+                    "CaseSensitive" : usernameConfig.CaseSensitive
+                }
+             ) +
+             attributeIfContent(
+                "UsernameAttributes",
+                usernameConfig.Attributes
+             ) +
+             attributeIfContent(
+                 "DeviceConfiguration",
+                 userDeviceTracking
              )
         outputs=USERPOOL_OUTPUT_MAPPINGS
         outputId=outputId
@@ -288,8 +403,12 @@
         userPoolId
         generateSecret=false
         tokenValidity=30
-        tier=""
-        component=""
+        oAuthFlows=[]
+        oAuthScopes=[]
+        oAuthEnabled=true
+        identityProviders=[]
+        callbackUrls=[]
+        logoutUrls=[]
         dependencies=""
         outputId=""
 ]
@@ -302,9 +421,125 @@
                 "ClientName" : name,
                 "GenerateSecret" : generateSecret,
                 "RefreshTokenValidity" : tokenValidity,
-                "UserPoolId" : getReference(userPoolId)
-            }
+                "UserPoolId" : getReference(userPoolId),
+                "AllowedOAuthFlowsUserPoolClient" : oAuthEnabled,
+                "PreventUserExistenceErrors" : "ENABLED"
+            } +
+            attributeIfContent(
+                "AllowedOAuthFlows",
+                oAuthFlows
+            ) +
+            attributeIfContent(
+                "AllowedOAuthScopes",
+                oAuthScopes
+            ) +
+            attributeIfContent(
+                "SupportedIdentityProviders",
+                identityProviders
+            ) +
+            attributeIfContent(
+                "CallbackURLs",
+                callbackUrls
+            ) +
+            attributeIfContent(
+                "LogoutURLs",
+                logoutUrls
+            )
         outputs=USERPOOL_CLIENT_OUTPUT_MAPPINGS
+        outputId=outputId
+        dependencies=dependencies
+    /]
+[/#macro]
+
+
+[#macro createUserPoolAuthProvider id name
+        userPoolId
+        providerType
+        providerDetails
+        attributeMappings={}
+        idpIdentifiers=[]
+        dependencies=""
+        outputId=""
+ ]
+    [@cfResource
+        id=id
+        type="AWS::Cognito::UserPoolIdentityProvider"
+        properties={
+            "ProviderName" : name,
+            "ProviderType" : providerType,
+            "UserPoolId" : getReference(userPoolId),
+            "ProviderDetails" : providerDetails
+        } +
+        attributeIfContent(
+            "IdpIdentifiers",
+            idpIdentifiers
+        ) +
+        attributeIfContent(
+            "AttributeMapping",
+            attributeMappings
+        )
+
+        outputs=USERPOOL_AUTHPROVIDER_OUTPUT_MAPPINGS
+        outputId=outputId
+        dependencies=dependencies
+    /]
+[/#macro]
+
+[#macro createUserPoolDomain id
+        userPoolId
+        domainName
+        customDomain=false
+        certificateArn=""
+        dependencies=""
+        outputId=""
+ ]
+    [@cfResource
+        id=id
+        type="AWS::Cognito::UserPoolDomain"
+        properties={
+            "UserPoolId" : getReference(userPoolId),
+            "Domain" : domainName
+        } +
+        attributeIfTrue(
+            "CustomDomainConfig",
+            customDomain,
+            {
+                "CertificateArn" : certificateArn
+            }
+        )
+        outputs=USERPOOL_DOMAIN_OUTPUT_MAPPINGS
+        outputId=outputId
+        dependencies=dependencies
+    /]
+[/#macro]
+
+
+[#function getUserPoolResourceScope name description ]
+    [#return
+        {
+            "ScopeName" : name,
+            "ScopeDescription" : description
+        }
+    ]
+[/#function]
+
+[#macro createUserPoolResourceServer id name
+    identifier
+    userPoolId
+    scopes=[]
+    dependencies=""
+    outputId=""
+]
+    [@cfResource
+        id=id
+        type="AWS::Cognito::UserPoolResourceServer"
+        properties={
+            "Identifier" : identifier,
+            "UserPoolId" : getReference(userPoolId),
+            "Name" : name,
+            "Scopes" : scopes
+        }
+        outputs=USERPOOL_RESOURCESERVER_OUTPUT_MAPPINGS
         outputId=outputId
         dependencies=dependencies
     /]
