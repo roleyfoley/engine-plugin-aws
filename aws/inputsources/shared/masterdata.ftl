@@ -1221,7 +1221,7 @@
               }
             },
             "DeploymentType": "EDGE",
-            "RunTime": "nodejs8.10",
+            "RunTime": "nodejs12.x",
             "MemorySize": 128,
             "Timeout": 1,
             "FixedCodeVersion": {},
