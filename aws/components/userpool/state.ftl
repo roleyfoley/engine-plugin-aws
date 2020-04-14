@@ -215,3 +215,45 @@
             }
         }]
 [/#macro]
+
+[#macro aws_userpoolresource_cf_state occurrence parent={} ]
+    [#local core = occurrence.Core]
+    [#local solution = occurrence.Configuration.Solution]
+
+    [#local resourceServerId = formatResourceId(AWS_COGNITO_USERPOOL_RESOURCESERVER_RESOURCE_TYPE, core.Id) ]
+
+    [#local scopeResources = {}]
+    [#local scopeNames = []]
+    [#list solution.Scopes as id,scope ]
+        [#local scopeResources += {
+            "resourceScope" + id : {
+                "Id" : formatResourceId(AWS_COGNITO_USERPOOL_RESOURCESCOPE_RESOURCE_TYPE, core.Id, id),
+                "Name" : scope.Name,
+                "Description" : scope.Description,
+                "Type" : AWS_COGNITO_USERPOOL_RESOURCESCOPE_RESOURCE_TYPE
+            }
+        }]
+        [#local scopeNames += [ scope.Name ]]
+    [/#list]
+
+    [#assign componentState =
+        {
+            "Resources" : {
+                "resourceserver" : {
+                    "Id" : resourceServerId,
+                    "Name" : core.SubComponent.Name,
+                    "Type" : AWS_COGNITO_USERPOOL_RESOURCESERVER_RESOURCE_TYPE
+                }
+            } +
+            scopeResources,
+            "Attributes" : {
+                "IDENTIFIER" : getExistingReference(resourceServerId),
+                "SCOPES" : scopeNames?join(",")
+            },
+            "Roles" : {
+                "Inbound" : {},
+                "Outbound" : {}
+            }
+        }
+    ]
+[/#macro]

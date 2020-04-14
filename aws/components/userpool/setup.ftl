@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_userpool_cf_generationcontract_solution occurrence ]
-    [@addDefaultGenerationContract subsets=["prologue", "template", "epilogue", "cli"] /]
+    [@addDefaultGenerationContract subsets=["template" ] /]
 [/#macro]
 
 [#macro aws_userpool_cf_setup_solution occurrence ]
@@ -74,7 +74,59 @@
         [#local mfaConfig = mfaRequired?then("ON", "OFF") ]
     [/#if]
 
-    [#local userPoolUpdateCommand = "updateUserPool" ]
+    [#local deviceTrackingConfig = {}]
+    [#if solution.Security.UserDeviceTracking?is_boolean ]
+        [#if solution.Security.UserDeviceTracking ]
+            [#local deviceTrackingConfig = {
+                "ChallengeRequiredOnNewDevice" : true,
+                "DeviceOnlyRememberedOnUserPrompt" : false
+            }]
+        [#else]
+            [#local deviceTrackingConfig = {}]
+        [/#if]
+    [#else]
+        [#switch solution.Security.UserDeviceTracking ]
+            [#case "true" ]
+                [#local deviceTrackingConfig = {
+                    "ChallengeRequiredOnNewDevice" : true,
+                    "DeviceOnlyRememberedOnUserPrompt" : false
+                }]
+                [#break]
+
+            [#case "false" ]
+                [#local deviceTrackingConfig = {}]
+                [#break]
+
+            [#case "optional" ]
+                [#local deviceTrackingConfig = {
+                    "ChallengeRequiredOnNewDevice" : true,
+                    "DeviceOnlyRememberedOnUserPrompt" : true
+                }]
+                [#break]
+        [/#switch]
+    [/#if]
+
+    [#local loginAliases = solution.Username.Aliases ]
+    [#if (solution.LoginAliases )?has_content ]
+        [@fatal
+            message="LoginAliases deprecated"
+            detail="LoginAliases has been moved to Username.Aliases"
+            context={
+                "LoginAliases" : solution.LoginAliases
+            }
+        /]
+    [/#if]
+
+    [#if (solution.Username.Aliases )?has_content && ( solution.Username.Attributes )?has_content ]
+        [@fatal
+            message="Username Aliases and Attributes defined"
+            detail="Can only assign aliases or attributes"
+            context={
+                "Username" : solution.Username
+            }
+        /]
+    [/#if]
+
     [#local userPoolClientUpdateCommand = "updateUserPoolClient" ]
     [#local userPoolDomainCommand = "setDomainUserPool" ]
     [#local userPoolAuthProviderUpdateCommand = "updateUserPoolAuthProvider" ]
@@ -128,7 +180,7 @@
         [#local smsVerification = true]
     [/#if]
 
-    [#if solution.VerifyEmail || ( asArray(solution.LoginAliases)?seq_contains("email"))]
+    [#if solution.VerifyEmail || loginAliases?seq_contains("email")]
         [#if ! (solution.Schema["email"]!"")?has_content ]
             [@fatal
                 message="Schema Attribute required: email - Add Schema listed in detail"
@@ -248,25 +300,6 @@
         [/#switch]
     [/#list]
 
-    [#-- Initialise epilogue script with common parameters --]
-    [#if deploymentSubsetRequired("epilogue", false)]
-        [@addToDefaultBashScriptOutput
-            content=[
-                " case $\{STACK_OPERATION} in",
-                "   create|update)",
-                "       # Get cli config file",
-                "       split_cli_file \"$\{CLI}\" \"$\{tmpdir}\" || return $?",
-                "       # Get userpool id",
-                "       export userPoolId=$(get_cloudformation_stack_output" +
-                "       \"" + region + "\" " +
-                "       \"$\{STACK_NAME}\" " +
-                "       \"" + userPoolId + "\" " +
-                "       || return $?)",
-                "       ;;",
-                " esac"
-            ]
-        /]
-    [/#if]
 
     [#if ((mfaRequired) || ( solution.VerifyPhone))]
         [#if (deploymentSubsetRequired("iam", true) || deploymentSubsetRequired("userpool", true)) &&
@@ -326,117 +359,81 @@
 
             [#switch authProviderEngine ]
                 [#case "SAML" ]
-                    [#local samlMetdataUrl = subSolution.SAML.MetadataUrl?has_content?then(
-                                                subSolution.SAML.MetadataUrl,
-                                                (environment[ settingsPrefix + "SAML_METADATA_URL"])!"COTFatal: MetadataUrl not defined"
-                                            )]
-                    [#local samlIDPSignout = (environment[settingsPrefix + "SAML_IDP_SIGNOUT"])?has_content?then(
-                                                    (environment[settingsPrefix + "SAML_IDP_SIGNOUT"]),
-                                                    subSolution.SAML.EnableIDPSignOut?c
-                                            )]
-
                     [#local providerDetails = {
-                        "MetadataURL" : samlMetdataUrl,
-                        "IDPSignout" : samlIDPSignout
+                        "MetadataURL" : valueIfContent(
+                                            (subSolution.SAML.MetadataUrl)!"",
+                                            (environment[ settingsPrefix + "SAML_METADATA_URL"])!"COTFatal: MetadataUrl not defined"
+                        ),
+                        "IDPSignout" : valueIfContent(
+                                            (environment[settingsPrefix + "SAML_IDP_SIGNOUT"])!"",
+                                            subSolution.SAML.EnableIDPSignOut?c
+                        )
                     }]
                     [#break]
                 [#case "OIDC" ]
 
-                    [#local oidcClientId = subSolution.OIDC.ClientId?has_content?then(
-                                                subSolution.OIDC.ClientId,
-                                                (environment[ settingsPrefix + "OIDC_CLIENT_ID"])!"COTFatal: ClientId not defined"
-                                            )]
-                    [#local oidcClientSecret = subSolution.OIDC.ClientSecret?has_content?then(
-                                                subSolution.OIDC.ClientSecret,
-                                                (environment[settingsPrefix + "OIDC_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
-                                            )]
-
-                    [#local oidcScopes = subSolution.OIDC.Scopes?has_content?then(
-                                                subSolution.OIDC.Scopes?join(","),
-                                                (environment[settingsPrefix + "OIDC_SCOPES"])!"COTFatal: Scopes not defined"
-                                            )]
-
-                    [#local oidcAttributesMethod = subSolution.OIDC.AttributesHttpMethod?has_content?then(
-                                                subSolution.OIDC.AttributesHttpMethod,
-                                                (environment[settingsPrefix + "OIDC_ATTRIBUTES_HTTP_METHOD"])!"COTFatal: AttributesHttpMethod not defined"
-                                            )]
-
-                    [#local oidcIssuer = subSolution.OIDC.Issuer?has_content?then(
-                                                subSolution.OIDC.Issuer,
-                                                (environment[settingsPrefix + "OIDC_ISSUER"])!"COTFatal: Issuer not defined"
-                                            )]
-
-                    [#local oidcAuthorizeUrl = subSolution.OIDC.AuthorizeUrl?has_content?then(
-                                                subSolution.OIDC.AuthorizeUrl,
-                                                (environment[settingsPrefix + "OIDC_AUTHORIZE_URL"])!"COTFatal: AuthorizeUrl not defined"
-                                            )]
-
-                    [#local oidcTokenUrl = subSolution.OIDC.TokenUrl?has_content?then(
-                                                subSolution.OIDC.TokenUrl,
-                                                (environment[settingsPrefix + "OIDC_TOKEN_URL"])!"COTFatal: TokenUrl not defined"
-                                            )]
-
-                    [#local oidcAttributesUrl = subSolution.OIDC.AttributesUrl?has_content?then(
-                                                subSolution.OIDC.AttributesUrl,
-                                                (environment[settingsPrefix + "OIDC_ATTRIBUTES_URL"])!"COTFatal: AttributesUrl not defined"
-                                            )]
-
-                    [#local oidcJwksUrl = subSolution.OIDC.JwksUrl?has_content?then(
-                                                subSolution.OIDC.JwksUrl,
-                                                (environment[settingsPrefix + "OIDC_JWKS_URL"])!"COTFatal: JwksUrl not defined"
-                                            )]
-
                     [#local providerDetails = {
-                        "client_id" : oidcClientId,
-                        "authorize_scopes" : oidcScopes,
-                        "attributes_request_method" : oidcAttributesMethod,
-                        "oidc_issuer" : oidcIssuer,
-                        "authorize_url"  : oidcAuthorizeUrl,
-                        "token_url" : oidcTokenUrl,
-                        "attributes_url" : oidcAttributesUrl,
-                        "jwks_uri" : oidcJwksUrl
-                    }]
+                        "client_id" : valueIfContent(
+                                            (subSolution.OIDC.ClientId)!"",
+                                            (environment[ settingsPrefix + "OIDC_CLIENT_ID"])!"COTFatal: ClientId not defined"
+                        ),
+                        "client_secret" : valueIfContent(
+                                            (subSolution.OIDC.ClientSecret)!"",
+                                            (environment[settingsPrefix + "OIDC_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
+                        ),
+                        "authorize_scopes" : valueIfContent(
+                                                (subSolution.OIDC.Scopes?join(","))!"",
+                                                (environment[settingsPrefix + "OIDC_SCOPES"])!"COTFatal: Scopes not defined"
+                        ),
+                        "attributes_request_method" : valueIfContent(
+                                                (subSolution.OIDC.AttributesHttpMethod)!"",
+                                                (environment[settingsPrefix + "OIDC_ATTRIBUTES_HTTP_METHOD"])!"COTFatal: AttributesHttpMethod not defined"
+                        ),
+                        "oidc_issuer" : valueIfContent(
+                                                (subSolution.OIDC.Issuer)!"",
+                                                (environment[settingsPrefix + "OIDC_ISSUER"])!"COTFatal: Issuer not defined"
+                        )
+                    } +
+                    attributeIfContent(
+                        "authorize_url",
+                        valueIfContent(
+                            (subSolution.OIDC.AuthorizeUrl)!"",
+                            (environment[settingsPrefix + "OIDC_AUTHORIZE_URL"])!""
+                        )
+                    ) +
+                    attributeIfContent(
+                        "token_url",
+                        valueIfContent(
+                            (subSolution.OIDC.TokenUrl)!"",
+                            (environment[settingsPrefix + "OIDC_TOKEN_URL"])!""
+                        )
+                    ) +
+                    attributeIfContent(
+                        "attributes_url",
+                        valueIfContent(
+                            (subSolution.OIDC.AttributesUrl)!"",
+                            (environment[settingsPrefix + "OIDC_ATTRIBUTES_URL"])!""
+                        )
+                    ) +
+                    attributeIfContent(
+                        "jwks_uri",
+                        valueIfContent(
+                            (subSolution.OIDC.JwksUrl)!"",
+                            (environment[settingsPrefix + "OIDC_JWKS_URL"])!""
+                        )
+                    )]
                     [#break]
             [/#switch]
 
-            [#local updateUserPoolAuthProvider =  {
-                    "AttributeMapping" : attributeMappings,
-                    "ProviderDetails" : providerDetails,
-                    "IdpIdentifiers" : subSolution.IDPIdentifiers
-                }
-            ]
-
-            [#if deploymentSubsetRequired("cli", false)]
-                [@addCliToDefaultJsonOutput
-                    id=authProviderId
-                    command=userPoolAuthProviderUpdateCommand
-                    content=updateUserPoolAuthProvider
-                /]
-            [/#if]
-
-            [#if deploymentSubsetRequired("epilogue", false)]
-                [#local authProviderEpilogue +=
-                    [
-                        " case $\{STACK_OPERATION} in",
-                        "   create|update)",
-                        "       # Manage Userpool auth provider",
-                        "       info \"Applying Cli level configuration to UserPool Auth Provider - Id: " + authProviderId +  "\"",
-                        "       update_cognito_userpool_authprovider" +
-                        "       \"" + region + "\" " +
-                        "       \"$\{userPoolId}\" " +
-                        "       \"" + authProviderName + "\" " +
-                        "       \"" + authProviderEngine + "\" " +
-                        (authProviderEngine == "OIDC" )?then(
-                            "       \"" + subSolution.EncryptionScheme + "\" \"" + (oidcClientSecret!"") + "\" ",
-                            "       \"\" \"\" "
-                        ) +
-                        "       \"$\{tmpdir}/cli-" +
-                            authProviderId + "-" + userPoolAuthProviderUpdateCommand + ".json\" || return $?",
-                        "       ;;",
-                        " esac"
-                    ]
-                ]
-            [/#if]
+            [@createUserPoolAuthProvider
+                id=authProviderId
+                name=authProviderName
+                userPoolId=userPoolId
+                providerType=authProviderEngine
+                providerDetails=providerDetails
+                attributeMappings=attributeMappings
+                idpIdentifiers=subSolution.IDPIdentifiers
+            /]
         [/#if]
 
         [#if subCore.Type == USERPOOL_CLIENT_COMPONENT_TYPE]
@@ -451,6 +448,10 @@
             [#local callbackUrls = []]
             [#local logoutUrls = []]
             [#local identityProviders = [ ]]
+
+            [#local clientDepedencies = []]
+
+            [#local oAuthScopes = subSolution.OAuth.Scopes]
 
             [#list subSolution.AuthProviders as authProvider ]
                 [#if authProvider?upper_case == "COGNITO" ]
@@ -467,7 +468,45 @@
                                             )]
                     [#if linkTarget?has_content && linkTarget.Configuration.Solution.Enabled  ]]
                         [#local identityProviders += [ linkTarget.State.Attributes["PROVIDER_NAME"] ]]
+                        [#local clientDepedencies += [ linkTarget.State.Resources["authprovider"].Id ]]
                     [/#if]
+                [/#if]
+            [/#list]
+
+            [#list subSolution.ResourceScopes as id,resourceScope ]
+                [#local linkTarget = getLinkTarget(
+                                            occurrence,
+                                            {
+                                                "Tier" : core.Tier.Id,
+                                                "Component" : core.Component.RawId,
+                                                "Resource" : resourceScope.Name
+                                            },
+                                            false
+                                        )]
+                [#if linkTarget?has_content && linkTarget.Configuration.Solution.Enabled ]]
+
+                    [#local resourceIdentifier = getReference( linkTarget.State.Resources["resourceserver"].Id )  ]
+
+                    [#list linkTarget.State.Resources as id,linkResource ]
+
+                        [@debug message="linkResource"  context=linkResource enabled=true /]
+                        [#if linkResource.Type == AWS_COGNITO_USERPOOL_RESOURCESCOPE_RESOURCE_TYPE ]
+                            [#if resourceScope.Scopes?seq_contains(linkResource.Name)]
+
+                                [#local oAuthScopes += [{
+                                        "Fn::Join": [
+                                            "/",
+                                            [
+                                                resourceIdentifier,
+                                                linkResource.Name
+                                            ]
+                                        ]
+                                    }]]
+                                [#local clientDepedencies += [ linkTarget.State.Resources["resourceserver"].Id]]
+                            [/#if]
+
+                        [/#if]
+                    [/#list]
                 [/#if]
             [/#list]
 
@@ -514,59 +553,63 @@
 
             [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
                 [@createUserPoolClient
-                    component=core.Component
-                    tier=core.Tier
                     id=userPoolClientId
                     name=userPoolClientName
                     userPoolId=userPoolId
                     generateSecret=subSolution.ClientGenerateSecret
                     tokenValidity=subSolution.ClientTokenValidity
+                    oAuthFlows=subSolution.OAuth.Flows
+                    oAuthScopes=oAuthScopes
+                    oAuthEnabled=true
+                    identityProviders=identityProviders
+                    callbackUrls=callbackUrls
+                    logoutUrls=logoutUrls
+                    dependencies=clientDepedencies
                 /]
-            [/#if]
-
-            [#if deploymentSubsetRequired("cli", false)]
-                [#local updateUserPoolClient =  {
-                        "CallbackURLs": callbackUrls,
-                        "LogoutURLs": logoutUrls,
-                        "AllowedOAuthFlows": asArray(subSolution.OAuth.Flows),
-                        "AllowedOAuthScopes": asArray(subSolution.OAuth.Scopes),
-                        "AllowedOAuthFlowsUserPoolClient": true,
-                        "SupportedIdentityProviders" : identityProviders
-                    }
-                ]
-
-                [@addCliToDefaultJsonOutput
-                    id=userPoolClientId
-                    command=userPoolClientUpdateCommand
-                    content=updateUserPoolClient
-                /]
-            [/#if]
-
-            [#if deploymentSubsetRequired("epilogue", false)]
-                [#local userPoolClientEpilogue +=
-                    [
-                        " case $\{STACK_OPERATION} in",
-                        "   create|update)",
-                        "       # Manage Userpool client",
-                        "       info \"Applying Cli level configuration to UserPool Client - Id: " + userPoolClientId +  "\"",
-                        "       export userPoolClientId=$(get_cloudformation_stack_output" +
-                        "       \"" + region + "\" " +
-                        "       \"$\{STACK_NAME}\" " +
-                        "       \"" + userPoolClientId + "\" " +
-                        "       || return $?)",
-                        "       update_cognito_userpool_client" +
-                        "       \"" + region + "\" " +
-                        "       \"$\{userPoolId}\" " +
-                        "       \"$\{userPoolClientId}\" " +
-                        "       \"$\{tmpdir}/cli-" +
-                            userPoolClientId + "-" + userPoolClientUpdateCommand + ".json\" || return $?",
-                        "       ;;",
-                        " esac"
-                    ]
-                ]
             [/#if]
         [/#if]
 
+        [#if subCore.Type == USERPOOL_RESOURCE_COMPONENT_TYPE ]
+            [#local resourceServerId  = subResources["resourceserver"].Id ]
+            [#local resourceServerName = subResources["resourceserver"].Name ]
+
+            [#local serverIdentifier = ""]
+
+            [#-- determine the server id using links --]
+            [#local linkTarget = getLinkTarget(subOccurrence, subSolution.Server.Link )]
+            [@debug message="Link Target" context=linkTarget enabled=false /]
+
+            [#if !linkTarget?has_content]
+                [#continue]
+            [/#if]
+
+            [#local linkTargetAttributes = linkTarget.State.Attributes]
+
+            [#if ((linkTargetAttributes[subSolution.Server.LinkAttribute])!"")?has_content ]
+                [#local serverIdentifier = linkTargetAttributes[subSolution.Server.LinkAttribute] ]
+            [#else]
+                [@fatal
+                    message="Server Link Attribute not found"
+                    context=subSolution.Server
+                    detail="The LinkAttribute specified could not be found on the provided link"
+                /]
+            [/#if]
+
+            [#-- build userpool resource scopes --]
+            [#local resourceScopes = []]
+            [#list subSolution.Scopes as id,scope ]
+                [#local resourceScopes +=
+                    [ getUserPoolResourceScope(scope.Name, scope.Description ) ]]
+            [/#list]
+
+            [@createUserPoolResourceServer
+                id=resourceServerId
+                name=resourceServerName
+                identifier=serverIdentifier
+                userPoolId=userPoolId
+                scopes=resourceScopes
+            /]
+        [/#if]
     [/#list]
 
     [#if defaultUserPoolClientRequired && ! defaultUserPoolClientConfigured ]
@@ -600,6 +643,10 @@
             name=userPoolName
             tags=getOccurrenceCoreTags(occurrence, userPoolName)
             mfa=mfaConfig
+            mfaMethods=solution.MFAMethods
+            usernameConfig=solution.Username
+            userDeviceTracking=deviceTrackingConfig
+            userActivityTracking=solution.Security.ActivityTracking
             adminCreatesUser=solution.AdminCreatesUser
             schema=schema
             emailVerificationMessage=emailVerificationMessage
@@ -614,7 +661,7 @@
                 getUserPoolAutoVerification(solution.VerifyEmail, smsVerification),
                 []
             )
-            loginAliases=solution.LoginAliases
+            loginAliases=loginAliases
             passwordPolicy=getUserPoolPasswordPolicy(
                     solution.PasswordPolicy.MinimumLength,
                     solution.PasswordPolicy.Lowercase,
@@ -622,153 +669,26 @@
                     solution.PasswordPolicy.Numbers,
                     solution.PasswordPolicy.SpecialCharacters,
                     solution.UnusedAccountTimeout)
+            userAccountRecovery=solution.PasswordPolicy.AllowUserRecovery
             smsConfiguration=smsConfig
         /]
 
-    [/#if]
-    [#-- When using the cli to update a user pool, any properties that are not set in the update are reset to their default value --]
-    [#-- So to use the CLI to update the lambda triggers we need to generate all of the custom configuration we use in the CF template and use this as the update --]
-    [#if deploymentSubsetRequired("cli", false)]
-
-        [#local userPoolDomain = {
-            "Domain" : userPoolHostName
-        }]
-
-        [@addCliToDefaultJsonOutput
+        [@createUserPoolDomain
             id=userPoolDomainId
-            command=userPoolDomainCommand
-            content=userPoolDomain
+            userPoolId=userPoolId
+            domainName=userPoolHostName
+            customDomain=false
         /]
 
-        [#if customDomainRequired]
-
-            [#local userPoolCustomDomain = {
-                "Domain" : userPoolCustomDomainName,
-                "CustomDomainConfig" : {
-                    "CertificateArn" : userPoolCustomDomainCertArn
-                }
-            }]
-
-            [@addCliToDefaultJsonOutput
+        [#if customDomainRequired ]
+            [@createUserPoolDomain
                 id=userPoolCustomDomainId
-                command=userPoolDomainCommand
-                content=userPoolCustomDomain
+                userPoolId=userPoolId
+                domainName=userPoolCustomDomainName
+                customDomain=true
+                certificateArn=userPoolCustomDomainCertArn
             /]
-
         [/#if]
-    [/#if]
 
-    [#if deploymentSubsetRequired("prologue", false)]
-        [@addToDefaultBashScriptOutput
-            content=(getExistingReference(userPoolId)?has_content)?then(
-                [
-                    " # Get cli config file",
-                    " split_cli_file \"$\{CLI}\" \"$\{tmpdir}\" || return $?",
-                    " case $\{STACK_OPERATION} in",
-                    "    delete)",
-                    "       # Remove All Auth providers",
-                    "       info \"Removing any Auth providers\"",
-                    "       cleanup_cognito_userpool_authproviders" +
-                    "       \"" + region + "\" " +
-                    "       \"" + getExistingReference(userPoolId) + "\" " +
-                    "       \"" + authProviders?join(",") + "\" " +
-                    "       \"true\" || return $?",
-                    "       # Delete Userpool Domain",
-                    "       info \"Removing internal userpool hosted UI Domain\"",
-                    "       manage_cognito_userpool_domain" +
-                    "       \"" + region + "\" " +
-                    "       \"" + getExistingReference(userPoolId) + "\" " +
-                    "       \"$\{tmpdir}/cli-" +
-                                userPoolDomainId + "-" + userPoolDomainCommand + ".json\" \"delete\" \"internal\" || return $?"
-                ] +
-                (customDomainRequired)?then(
-                    [
-                        "       # Delete Userpool Domain",
-                        "       info \"Removing custom userpool hosted UI Domain\"",
-                        "       manage_cognito_userpool_domain" +
-                        "       \"" + region + "\" " +
-                        "       \"" + getExistingReference(userPoolId) + "\" " +
-                        "       \"$\{tmpdir}/cli-" +
-                                    userPoolCustomDomainId + "-" + userPoolDomainCommand + ".json\" \"delete\" \"custom\" || return $?"
-                    ],
-                    []
-                ) +
-                [
-                    "       ;;",
-                    " esac"
-                ],
-                []
-            )
-        /]
-    [/#if]
-
-    [#if deploymentSubsetRequired("epilogue", false)]
-        [@addToDefaultBashScriptOutput
-            content=
-                [
-                    "case $\{STACK_OPERATION} in",
-                    "  create|update)"
-                    "       # Adding Userpool Domain",
-                    "       info \"Adding internal domain for Userpool hosted UI\"",
-                    "       manage_cognito_userpool_domain" +
-                    "       \"" + region + "\" " +
-                    "       \"$\{userPoolId}\" " +
-                    "       \"$\{tmpdir}/cli-" +
-                                userPoolDomainId + "-" + userPoolDomainCommand + ".json\" \"create\" \"internal\" || return $?",
-                    "       ;;",
-                    " esac"
-                ] +
-                (customDomainRequired)?then(
-                    [
-                        "case $\{STACK_OPERATION} in",
-                        "  create|update)"
-                        "       # Adding Userpool Domain",
-                        "       info \"Adding custom domain for Userpool hosted UI\"",
-                        "       manage_cognito_userpool_domain" +
-                        "       \"" + region + "\" " +
-                        "       \"$\{userPoolId}\" " +
-                        "       \"$\{tmpdir}/cli-" +
-                                    userPoolCustomDomainId + "-" + userPoolDomainCommand + ".json\" \"create\" \"custom\" || return $?",
-                        "       customDomainDistribution=$(get_cognito_userpool_custom_distribution" +
-                        "       \"" + region + "\" " +
-                        "       \"" + userPoolCustomDomainName + "\" " +
-                        "       || return $?)"
-                    ] +
-                    pseudoStackOutputScript(
-                        "UserPool Hosted UI Custom Domain CloudFront distribution",
-                        {
-                            formatId(userPoolCustomDomainId, DNS_ATTRIBUTE_TYPE) : "$\{customDomainDistribution}"
-                        },
-                        "hosted-ui"
-                    ) +
-                    [
-                        "       ;;",
-                        " esac"
-                    ],
-                    []
-                )+
-                [#-- auth providers need to be created before userpool clients are updated --]
-                (authProviderEpilogue?has_content)?then(
-                    authProviderEpilogue +
-                    [
-                        "case $\{STACK_OPERATION} in",
-                        "  create|update)"
-                        "       # Remove Old Auth providers",
-                        "       info \"Removing old Auth providers\"",
-                        "       cleanup_cognito_userpool_authproviders" +
-                        "       \"" + region + "\" " +
-                        "       \"" + getExistingReference(userPoolId) + "\" " +
-                        "       \"" + authProviders?join(",") + "\" " +
-                        "       \"false\" || return $?",
-                        "       ;;",
-                        "esac"
-                    ],
-                    []
-                ) +
-                (userPoolClientEpilogue?has_content)?then(
-                    userPoolClientEpilogue,
-                    []
-                )
-        /]
     [/#if]
 [/#macro]
