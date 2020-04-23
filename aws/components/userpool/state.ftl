@@ -181,7 +181,7 @@
             parentAttributes +
             {
                 "CLIENT" : getExistingReference(userPoolClientId),
-                "LB_OAUTH_SCOPE" : (solution.OAuth.Scopes)?join(", ")
+                "LB_OAUTH_SCOPE" : (solution.OAuth.Scopes)?join(" ")
             },
             "Roles" : {
                 "Inbound" : {},
@@ -248,7 +248,7 @@
             scopeResources,
             "Attributes" : {
                 "IDENTIFIER" : getExistingReference(resourceServerId),
-                "SCOPES" : scopeNames?join(",")
+                "SCOPES" : scopeNames?join(" ")
             },
             "Roles" : {
                 "Inbound" : {},

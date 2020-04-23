@@ -382,7 +382,7 @@
                                             (environment[settingsPrefix + "OIDC_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
                         ),
                         "authorize_scopes" : valueIfContent(
-                                                (subSolution.OIDC.Scopes?join(","))!"",
+                                                (subSolution.OIDC.Scopes?join(" "))!"",
                                                 (environment[settingsPrefix + "OIDC_SCOPES"])!"COTFatal: Scopes not defined"
                         ),
                         "attributes_request_method" : valueIfContent(
