@@ -21,6 +21,14 @@
                                     segmentObject.Operations.FlowLogs.Enabled!
                                     solution.Logging.EnableFlowLogs ]
 
+    [#local vpcFlowLogEnabled = isPresent(segmentObject.Operations)?then(
+        isPresent(environmentObject.Operations.FlowLogs) || 
+        isPresent(segmentObject.Operations.FlowLogs) ||
+        solution.Logging.EnableFlowLogs,
+        isPresent(environmentObject.Operations.FlowLogs) || 
+        solution.Logging.EnableFlowLogs
+    )]
+
     [#local networkCIDR = (network.CIDR)?has_content?then(
                     network.CIDR.Address + "/" + network.CIDR.Mask,
                     solution.Address.CIDR )]
