@@ -425,15 +425,17 @@
                     [#break]
             [/#switch]
 
-            [@createUserPoolAuthProvider
-                id=authProviderId
-                name=authProviderName
-                userPoolId=userPoolId
-                providerType=authProviderEngine
-                providerDetails=providerDetails
-                attributeMappings=attributeMappings
-                idpIdentifiers=subSolution.IDPIdentifiers
-            /]
+            [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
+                [@createUserPoolAuthProvider
+                    id=authProviderId
+                    name=authProviderName
+                    userPoolId=userPoolId
+                    providerType=authProviderEngine
+                    providerDetails=providerDetails
+                    attributeMappings=attributeMappings
+                    idpIdentifiers=subSolution.IDPIdentifiers
+                /]
+            [/#if]
         [/#if]
 
         [#if subCore.Type == USERPOOL_CLIENT_COMPONENT_TYPE]
@@ -489,7 +491,7 @@
 
                     [#list linkTarget.State.Resources as id,linkResource ]
 
-                        [@debug message="linkResource"  context=linkResource enabled=true /]
+                        [@debug message="linkResource"  context=linkResource enabled=false /]
                         [#if linkResource.Type == AWS_COGNITO_USERPOOL_RESOURCESCOPE_RESOURCE_TYPE ]
                             [#if resourceScope.Scopes?seq_contains(linkResource.Name)]
 
@@ -602,13 +604,15 @@
                     [ getUserPoolResourceScope(scope.Name, scope.Description ) ]]
             [/#list]
 
-            [@createUserPoolResourceServer
-                id=resourceServerId
-                name=resourceServerName
-                identifier=serverIdentifier
-                userPoolId=userPoolId
-                scopes=resourceScopes
-            /]
+            [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
+                [@createUserPoolResourceServer
+                    id=resourceServerId
+                    name=resourceServerName
+                    identifier=serverIdentifier
+                    userPoolId=userPoolId
+                    scopes=resourceScopes
+                /]
+            [/#if]
         [/#if]
     [/#list]
 
