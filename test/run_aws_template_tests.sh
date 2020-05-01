@@ -4,7 +4,7 @@ echo "###############################################"
 echo "# Running template tests for the AWS provider #"
 echo "###############################################"
 
-TEST_OUTPUT_DIR="${TEST_OUTPUT_DIR:-"./cot_tests"}"
+TEST_OUTPUT_DIR="${TEST_OUTPUT_DIR:-"./hamlet_tests"}"
 
 if [[ -d "${TEST_OUTPUT_DIR}" ]]; then
     rm -r "${TEST_OUTPUT_DIR}"
@@ -25,8 +25,8 @@ for unit in $UNIT_LIST; do
     ${GENERATION_DIR}/createTemplate.sh -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -l application -u $unit > /dev/null 2>&1 || true
 done
 
-cot test generate --directory "${TEST_OUTPUT_DIR}" -o "${TEST_OUTPUT_DIR}/test_templates.py"
+hamlet test generate --directory "${TEST_OUTPUT_DIR}" -o "${TEST_OUTPUT_DIR}/test_templates.py"
 
 cd "${TEST_OUTPUT_DIR}"
 echo "Running Tests..."
-cot test run -t "./test_templates.py"
+hamlet test run -t "./test_templates.py"

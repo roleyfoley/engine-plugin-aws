@@ -43,6 +43,21 @@
     } ]
 [/#function]
 
+[#function getInitConfigDirectories ignoreErrors=false priority=0 ]
+    [#return
+        {
+            "${priority}_Directories" : {
+                "commands": {
+                    "01Directories" : {
+                        "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /opt/codeontap/scripts && mkdir --parents --mode=0755 /var/log/codeontap",
+                        "ignoreErrors" : ignoreErrors
+                    }
+                }
+            }
+        }
+    ]
+[/#function]
+
 [#function getInitConfigBootstrap occurrence operationsBucket dataBucket ignoreErrors=false priority=1 ]
     [#local role = (occurrence.Configuration.Settings.Product["Role"].Value)!""]
     [#return
@@ -105,21 +120,6 @@
                     },
                     "02Initialise" : {
                         "command" : "/opt/codeontap/bootstrap/init.sh",
-                        "ignoreErrors" : ignoreErrors
-                    }
-                }
-            }
-        }
-    ]
-[/#function]
-
-[#function getInitConfigDirectories ignoreErrors=false priority=2 ]
-    [#return
-        {
-            "${priority}_Directories" : {
-                "commands": {
-                    "01Directories" : {
-                        "command" : "mkdir --parents --mode=0755 /etc/codeontap && mkdir --parents --mode=0755 /opt/codeontap/bootstrap && mkdir --parents --mode=0755 /opt/codeontap/scripts && mkdir --parents --mode=0755 /var/log/codeontap",
                         "ignoreErrors" : ignoreErrors
                     }
                 }
