@@ -337,7 +337,7 @@
             [#local authProviderId = subResources["authprovider"].Id ]
             [#local authProviderName = subResources["authprovider"].Name ]
             [#local authProviderEngine = subSolution.Engine]
-            [#local settingsPrefix = subSolution.SettingsPrefix?upper_case?ensure_ends_with("_") ]
+            [#local settingsPrefix = subSolution.SettingsPrefix?upper_case ]
 
             [#local linkTargets = getLinkTargets(subOccurrence) ]
             [#local baselineLinks = getBaselineLinks(subOccurrence, [] )]
@@ -361,72 +361,72 @@
                 [#case "Google"]
                 [#case "Amazon"]
                     [#local providerDetails = {
-                        "client_id" : valueIfContent(
-                                            (subSolution[authProviderName].ClientId)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_CLIENT_ID"])!"COTFatal: ClientId not defined"
+                        "client_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "CLIENT", "ID"],"_") ])!"",
+                                            (subSolution[authProviderEngine].ClientId)!"COTFatal: ClientId not defined"
                         ),
-                        "client_secret" : valueIfContent(
-                                            (subSolution[authProviderName].ClientSecret)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
+                        "client_secret" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "CLIENT", "SECRET"],"_") ])!"",
+                                            (subSolution[authProviderEngine].ClientSecret)!"COTFatal: ClientSecret not defined"
                         ),
-                        "authorize_scopes" : valueIfContent(
-                                            (subSolution[authProviderName].Scopes)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_SCOPES"])!"COTFatal: Scopes not defined"
+                        "authorize_scopes" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "SCOPES"],"_") ])!"",
+                                            (subSolution[authProviderEngine].Scopes)!"COTFatal: Scopes not defined"
                         )
                     }]
                     [#break]
 
                 [#case "Facebook" ]
                     [#local providerDetails = {
-                        "client_id" : valueIfContent(
-                                            (subSolution[authProviderName].ClientId)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_CLIENT_ID"])!"COTFatal: ClientId not defined"
+                        "client_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "CLIENT", "ID"],"_") ])!"",
+                                            (subSolution[authProviderEngine].ClientId)!"COTFatal: ClientId not defined"
                         ),
-                        "client_secret" : valueIfContent(
-                                            (subSolution[authProviderName].ClientSecret)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
+                        "client_secret" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "CLIENT", "SECRET"],"_") ])!"",
+                                            (subSolution[authProviderEngine].ClientSecret)!"COTFatal: ClientSecret not defined"
                         ),
-                        "authorize_scopes" : valueIfContent(
-                                            (subSolution[authProviderName].Scopes)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_SCOPES"])!"COTFatal: Scopes not defined"
+                        "authorize_scopes" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "SCOPES"],"_") ])!"",
+                                            (subSolution[authProviderEngine].Scopes)!"COTFatal: Scopes not defined"
                         ),
-                        "api_version" : valueIfContent(
-                                            (subSolution[authProviderName].APIVersion)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_API_VERSION"])!"COTFatal: APIVersion not defined"
+                        "api_version" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "API", "VERSION"],"_") ])!"",
+                                            (subSolution[authProviderEngine].APIVersion)!"COTFatal: APIVersion not defined"
                         )
                     }]
                     [#break]
 
                 [#case "Apple"]
                     [#local providerDetails = {
-                        "client_id" : valueIfContent(
-                                            (subSolution[authProviderName].ClientId)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_CLIENT_ID"])!"COTFatal: ClientId not defined"
+                        "client_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "CLIENT", "ID"],"_") ])!"",
+                                            (subSolution[authProviderEngine].ClientId)!"COTFatal: ClientId not defined"
                         ),
-                        "team_id" : valueIfContent(
-                                            (subSolution[authProviderName].TeamId)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_TEAM_ID"])!"COTFatal: TeamId not defined"
+                        "team_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "TEAM", "ID"],"_") ])!"",
+                                            (subSolution[authProviderEngine].TeamId)!"COTFatal: TeamId not defined"
                         ),
-                        "key_id" : valueIfContent(
-                                            (subSolution[authProviderName].KeyId)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_KEY_ID"])!"COTFatal: KeyId not defined"
+                        "key_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "KEY", "ID"],"_") ])!"",
+                                            (subSolution[authProviderEngine].KeyId)!"COTFatal: KeyId not defined"
                         ),
-                        "private_key" : valueIfContent(
-                                            (subSolution[authProviderName].PrivateKey)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_PRIVATE_KEY"])!"COTFatal: PrivateKey not defined"
+                        "private_key" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "PRIVATE", "KEY"],"_") ])!"",
+                                            (subSolution[authProviderEngine].PrivateKey)!"COTFatal: PrivateKey not defined"
                         ),
-                        "authorize_scopes" : valueIfContent(
-                                            (subSolution[authProviderName].Scopes)!"",
-                                            (environment[ settingsPrefix + "_" + authProviderName?upper_case + "_SCOPES"])!"COTFatal: Scopes not defined"
+                        "authorize_scopes" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "SCOPES"],"_") ])!"",
+                                            (subSolution[authProviderEngine].Scopes)!"COTFatal: Scopes not defined"
                         )
                     }]
                     [#break]
 
                 [#case "SAML" ]
                     [#local providerDetails = {
-                        "MetadataURL" : valueIfContent(
-                                            (subSolution.SAML.MetadataUrl)!"",
-                                            (environment[ settingsPrefix + "SAML_METADATA_URL"])!"COTFatal: MetadataUrl not defined"
+                        "MetadataURL" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "SAML", "METADATA", "URL"],"_") ])!"",
+                                            (subSolution[authProviderEngine].MetadataUrl)!"COTFatal: MetadataUrl not defined"
                         ),
                         "IDPSignout" :  subSolution.SAML.EnableIDPSignOut
                     }]
@@ -435,57 +435,62 @@
                 [#case "OIDC" ]
 
                     [#local providerDetails = {
-                        "client_id" : valueIfContent(
-                                            (subSolution.OIDC.ClientId)!"",
-                                            (environment[ settingsPrefix + "OIDC_CLIENT_ID"])!"COTFatal: ClientId not defined"
+                        "client_id" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, "OIDC", "CLIENT", "ID"],"_") ])!"",
+                                            (subSolution.OIDC.ClientId)!"COTFatal: ClientId not defined"
                         ),
-                        "client_secret" : valueIfContent(
-                                            (subSolution.OIDC.ClientSecret)!"",
-                                            (environment[settingsPrefix + "OIDC_CLIENT_SECRET"])!"COTFatal: ClientSecret not defined"
+                        "client_secret" : contentIfContent(
+                                            (environment[ concatenate([settingsPrefix, "OIDC", "CLIENT", "SECRET"],"_") ])!"",
+                                            (subSolution.OIDC.ClientSecret)!"COTFatal: ClientSecret not defined"
                         ),
-                        "authorize_scopes" : valueIfContent(
-                                                (subSolution.OIDC.Scopes?join(" "))!"",
-                                                (environment[settingsPrefix + "OIDC_SCOPES"])!"COTFatal: Scopes not defined"
+                        "authorize_scopes" : contentIfContent(
+                                                (environment[ concatenate([settingsPrefix, "OIDC", "SCOPES"],"_") ])!"",
+                                                (subSolution.OIDC.Scopes?join(" "))!"COTFatal: Scopes not defined"
                         ),
-                        "attributes_request_method" : valueIfContent(
-                                                (subSolution.OIDC.AttributesHttpMethod)!"",
-                                                (environment[settingsPrefix + "OIDC_ATTRIBUTES_HTTP_METHOD"])!"COTFatal: AttributesHttpMethod not defined"
+                        "attributes_request_method" : contentIfContent(
+                                                (environment[ concatenate([settingsPrefix, "OIDC", "ATTRIBUTES", "HTTP", "METHOD"],"_") ])!"",
+                                                (subSolution.OIDC.AttributesHttpMethod)!"COTFatal: AttributesHttpMethod not defined"
                         ),
-                        "oidc_issuer" : valueIfContent(
-                                                (subSolution.OIDC.Issuer)!"",
-                                                (environment[settingsPrefix + "OIDC_ISSUER"])!"COTFatal: Issuer not defined"
+                        "oidc_issuer" : contentIfContent(
+                                                (environment[ concatenate([settingsPrefix, "OIDC", "ISSUER"],"_") ])!"",
+                                                (subSolution.OIDC.Issuer)!"COTFatal: Issuer not defined"
                         )
                     } +
                     attributeIfContent(
                         "authorize_url",
-                        valueIfContent(
-                            (subSolution.OIDC.AuthorizeUrl)!"",
-                            (environment[settingsPrefix + "OIDC_AUTHORIZE_URL"])!""
+                        contentIfContent(
+                            (environment[ concatenate([settingsPrefix, "OIDC", "AUTHORIZE", "URL"],"_") ])!"",
+                            (subSolution.OIDC.AuthorizeUrl)!""
                         )
                     ) +
                     attributeIfContent(
                         "token_url",
-                        valueIfContent(
-                            (subSolution.OIDC.TokenUrl)!"",
-                            (environment[settingsPrefix + "OIDC_TOKEN_URL"])!""
+                        contentIfContent(
+                            (environment[ concatenate([settingsPrefix, "OIDC", "TOKEN", "URL"],"_") ])!"",
+                            (subSolution.OIDC.TokenUrl)!""
                         )
                     ) +
                     attributeIfContent(
                         "attributes_url",
-                        valueIfContent(
-                            (subSolution.OIDC.AttributesUrl)!"",
-                            (environment[settingsPrefix + "OIDC_ATTRIBUTES_URL"])!""
+                        contentIfContent(
+                            (environment[ concatenate([settingsPrefix, "OIDC", "ATTRIBUTES", "URL"],"_") ])!"",
+                            (subSolution.OIDC.AttributesUrl)!""
                         )
                     ) +
                     attributeIfContent(
                         "jwks_uri",
-                        valueIfContent(
-                            (subSolution.OIDC.JwksUrl)!"",
-                            (environment[settingsPrefix + "OIDC_JWKS_URL"])!""
+                        contentIfContent(
+                            (environment[ concatenate([settingsPrefix, "OIDC", "JWKS", "URL"],"_") ])!"",
+                            (subSolution.OIDC.JwksUrl)!""
                         )
                     )]
                     [#break]
             [/#switch]
+
+            [#-- Ensure authorize_scopes is a space separated list --]
+            [#if providerDetails.authorize_scopes?has_content && providerDetails.authorize_scopes?is_sequence]
+                [#local providerDetails += {"authorize_scopes" : providerDetails.authorize_scopes?join(" ")} ]
+            [/#if]
 
             [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
                 [@createUserPoolAuthProvider
