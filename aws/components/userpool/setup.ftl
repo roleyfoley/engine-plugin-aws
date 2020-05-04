@@ -395,12 +395,15 @@
                         "authorize_scopes" : contentIfContent(
                                             (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "SCOPES"],"_") ])!"",
                                             (subSolution[authProviderEngine].Scopes)!"COTFatal: Scopes not defined"
-                        ),
-                        "api_version" : contentIfContent(
-                                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "API", "VERSION"],"_") ])!"",
-                                            (subSolution[authProviderEngine].APIVersion)!"COTFatal: APIVersion not defined"
                         )
-                    }]
+                    } +
+                    attributeIfContent(
+                        "api_version",
+                        contentIfContent(
+                            (environment[ concatenate([settingsPrefix, authProviderName?upper_case, "API", "VERSION"],"_") ])!"",
+                            (subSolution[authProviderEngine].APIVersion)!""
+                        )
+                    ) ]
                     [#break]
 
                 [#case "Apple"]
