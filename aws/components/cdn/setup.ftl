@@ -191,6 +191,24 @@
         [#local originLinkTargetAttributes = originLink.State.Attributes ]
 
         [#switch originLinkTargetCore.Type]
+            [#case MOBILEAPP_COMPONENT_TYPE ]
+                [#local spaBaslineProfile = originLinkTargetConfiguration.Solution.Profiles.Baseline ]
+                [#local spaBaselineLinks = getBaselineLinks(originLink, [ "CDNOriginKey" ])]
+                [#local spaBaselineComponentIds = getBaselineComponentIds(spaBaselineLinks)]
+                [#local cfAccess = getExistingReference(spaBaselineComponentIds["CDNOriginKey"]!"")]
+
+                [#local originBucket = originLinkTargetAttributes["OTA_ARTEFACT_BUCKET"]]
+                [#local originPrefix = originLinkTargetAttributes["OTA_ARTEFACT_PREFIX"]]
+
+                [#local otaOrigin =
+                    getCFS3Origin(
+                        originId,
+                        originBucket,
+                        cfAccess,
+                        originPrefix
+                    )]
+                [#local origins += otaOrigin ]
+                [#break]
 
             [#case S3_COMPONENT_TYPE ]
 
