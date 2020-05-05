@@ -10,7 +10,7 @@
     [#local id = formatResourceId(COT_MOBILEAPP_RESOURCE_TYPE, core.Id)]
 
     [#local otaBucket = ""]
-    [#local otaPrefix = ""]
+    [#local otaPrefix = core.RelativePath ]
     [#local otaURL = ""]
 
     [#local releaseChannel =
@@ -37,7 +37,7 @@
                                 "config" )]
     [#local configFileName = "config.json" ]
 
-    [#list solution.Links?values as link]
+    [#list solution.Links as id,link]
         [#if link?is_hash]
             [#local linkTarget = getLinkTarget(occurrence, link) ]
 
@@ -55,20 +55,30 @@
 
             [#switch linkTargetCore.Type]
                 [#case S3_COMPONENT_TYPE ]
-                    [#if link.Id?lower_case?starts_with("ota") ]
+                    [#if id?lower_case?starts_with("ota") ]
                         [#local otaBucket = linkTargetAttributes["NAME"]]
-                        [#local otaPrefix = core.RelativePath ]
-                        [#local otaURL = formatRelativePath("https://", linkTargetAttributes["INTERNAL_FQDN"], otaPrefix )]
+                        [#local otaS3URL = formatRelativePath("https://", linkTargetAttributes["INTERNAL_FQDN"], otaPrefix )]
                     [/#if]
                     [#break]
                 [#case CDN_ROUTE_COMPONENT_TYPE ]
-                    [#if link.Id?lower_case?starts_with("ota")]
-                        [#local otaURL = formatRelativePath(linkTargetAttributes["URL"], otaPrefix) ]
+                    [#if id?lower_case?starts_with("ota")]
+                        [#if solution.UseOTAPrefix ]
+                            [#local otaCDNURL = formatRelativePath(linkTargetAttributes["URL"], otaPrefix )]
+                        [#else]
+                            [#local otaCDNURL = linkTargetAttributes["URL"] ]
+                        [/#if]
                     [/#if]
                     [#break]
             [/#switch]
         [/#if]
     [/#list]
+
+    [#-- CDN OTA endpoint is preferred to an S3 OTA Endpoint --]
+    [#if (otaCDNURL!"")?has_content ]
+        [#local otaURL = otaCDNURL ]
+    [#else]
+        [#local otaURL = otaS3URL ]
+    [/#if]
 
     [#assign componentState =
         {
