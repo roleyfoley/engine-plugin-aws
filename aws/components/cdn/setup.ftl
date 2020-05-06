@@ -208,6 +208,19 @@
                         originPrefix
                     )]
                 [#local origins += otaOrigin ]
+
+                [#local behaviour = getCFSPACacheBehaviour(
+                    otaOrigin,
+                    behaviourPattern,
+                    {
+                        "Default" : subSolution.CachingTTL.Default,
+                        "Max" : subSolution.CachingTTL.Maximum,
+                        "Min" : subSolution.CachingTTL.Minimum
+                    },
+                    subSolution.Compress,
+                    eventHandlers,
+                    _context.ForwardHeaders)]
+                    [#local routeBehaviours += behaviour ]
                 [#break]
 
             [#case S3_COMPONENT_TYPE ]
