@@ -191,6 +191,14 @@
                                     {
                                         "CanonicalUser": cfAccessId
                                     }
+                                ) +
+                                s3ListPermission(
+                                    s3Name,
+                                    originPath,
+                                    "*",
+                                    {
+                                        "CanonicalUser": cfAccessId
+                                    }
                                 )
                         ]
                     [/#if]
