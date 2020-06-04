@@ -273,17 +273,26 @@
                         vpc=getReference(vpcId)
                     /]
 
-                    [@createTransitGatewayRouteTablePropagation
-                        id=transitGatewayRoutePropogationId
-                        transitGatewayAttachment=getReference(transitGatewayAttachementId)
-                        transitGatewayRouteTable=transitGatewayRouteTable
-                    /]
-
                     [@createTransitGatewayRouteTableAssociation
                         id=routeTableAssociationId
                         transitGatewayAttachment=getReference(transitGatewayAttachementId)
                         transitGatewayRouteTable=transitGatewayRouteTable
                     /]
+
+                    [#list sourceCidrs as souceCidr ]
+                        [#local vpcRouteId = formatResourceId(
+                                AWS_TRANSITGATEWAY_ROUTE_RESOURCE_TYPE,
+                                gwCore.Id,
+                                souceCidr?index
+                        )]
+
+                        [@createTransitGatewayRoute
+                                id=vpcRouteId
+                                transitGatewayRouteTable=transitGatewayRouteTable
+                                transitGatewayAttachment=getReference(transitGatewayAttachementId)
+                                destinationCidr=souceCidr
+                        /]
+                    [/#list]
                 [/#if]
                 [#break]
         [/#switch]
