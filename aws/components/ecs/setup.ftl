@@ -738,7 +738,11 @@
 
                 [#local inboundPorts = []]
                 [#list containers as container ]
-                    [#local inboundPorts = combineEntities( inboundPorts, container.InboundPorts, UNIQUE_COMBINE_BEHAVIOUR) ]
+                    [#local inboundPorts = combineEntities(
+                                                inboundPorts,
+                                                (container.InboundPorts)![],
+                                                UNIQUE_COMBINE_BEHAVIOUR
+                                            )]
                 [/#list]
 
                 [@createSecurityGroupRulesFromNetworkProfile
