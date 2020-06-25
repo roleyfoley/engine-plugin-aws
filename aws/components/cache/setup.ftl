@@ -88,7 +88,6 @@
             id=cacheSecurityGroupId
             name=cacheSecurityGroupName
             vpcId=vpcId
-            networkProfile=networkProfile
             occurrence=occurrence
         /]
 
