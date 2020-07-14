@@ -65,7 +65,7 @@
         [/#if]
     [/#if]
 
-
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
     [#local processorProfile = getProcessor(occurrence, "es")]
     [#local dataNodeCount = multiAZ?then(
                                     processorProfile.CountPerZone * zones?size,
