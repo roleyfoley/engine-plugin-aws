@@ -31,6 +31,28 @@
     }
 ]
 
+[#macro setupLogGroup occurrence logGroupId logGroupName loggingProfile retention=0 ]
+    [#local dependencies = []]
+
+    [#if deploymentSubsetRequired("lg", true) &&
+            isPartOfCurrentDeploymentUnit(logGroupId)]
+        [@createLogGroup
+            id=logGroupId
+            name=logGroupName
+            retention=retention
+        /]
+        [#local dependencies += [ logGroupId ] ]
+    [/#if]
+
+    [@createLogSubscriptionFromLoggingProfile
+        occurrence=occurrence
+        logGroupId=logGroupId
+        logGroupName=logGroupName
+        loggingProfile=loggingProfile
+        dependencies=dependencies
+    /]
+[/#macro]
+
 [#macro createLogGroup id name retention=0]
     [@cfResource
         id=id
@@ -78,7 +100,9 @@
     /]
 [/#macro]
 
-[#macro createLogSubscription id logGroupName filter destination role="" dependencies=""  ]
+[#macro createLogSubscription id logGroupName logFilterId destination role="" dependencies=""  ]
+
+    [#local filter = getLogFilterPattern(logFilterId) ]
 
     [@cfResource
         id=id
@@ -92,6 +116,80 @@
             attributeIfContent("RoleArn", role, getArn(role) )
         dependencies=dependencies
     /]
+[/#macro]
+
+[#macro createLogSubscriptionFromLoggingProfile occurrence logGroupId logGroupName loggingProfile dependencies=[]]
+    [#list (loggingProfile.ForwardingRules)!{} as id,forwardingRule ]
+        [#list forwardingRule.Links?values as link]
+            [#if link?is_hash]
+                [#local linkTarget = getLinkTarget(occurrence, link) ]
+
+                [#if !linkTarget?has_content]
+                    [#continue]
+                [/#if]
+
+                [@createLogSubscriptionFromLink
+                    logGroupId=logGroupId
+                    logGroupName=logGroupName
+                    linkTarget=linkTarget
+                    filter=forwardingRule.Filter
+                    dependencies=dependencies
+                /]
+            [/#if]
+        [/#list]
+    [/#list]
+[/#macro]
+
+[#macro createLogSubscriptionFromLink logGroupId logGroupName filter linkTarget dependencies=[] ]
+
+    [#local linkTargetRoles = linkTarget.State.Roles ]
+
+    [#if (linkTargetRoles.Outbound["logwatcher"]!{})?has_content
+            && linkTarget.Direction == "outbound" ]
+
+            [#local roleRequired = false]
+            [#local forwardingRoleId = formatDependentRoleId(logGroupId, linkTarget.Core.Id ) ]
+
+            [#if ((linkTargetRoles.Outbound["logwatcher"].Policy)!{})?has_content ]
+
+                [#local roleRequired = true ]
+
+                [#if  deploymentSubsetRequired("iam", true)  &&
+                    isPartOfCurrentDeploymentUnit(forwardingRoleId) ]
+
+                    [@createRole
+                        id=forwardingRoleId
+                        trustedServices=[  "logs." + regionId + ".amazonaws.com" ]
+                        policies=[]
+                    /]
+
+                    [@createPolicy
+                        id=formatDependentPolicyId(logGroupId, linkTarget.Core.Id )
+                        name="log-forwarding"
+                        statements=linkTargetRoles.Outbound["logwatcher"].Policy +
+                                    iamPassRolePermission(
+                                        getReference(forwardingRoleId, ARN_ATTRIBUTE_TYPE)
+                                    )
+                        roles=forwardingRoleId
+                    /]
+                [/#if]
+            [/#if]
+
+            [#if deploymentSubsetRequired("lg", true) &&
+                isPartOfCurrentDeploymentUnit(logGroupId)]
+                    [@createLogSubscription
+                        id=formatDependentLogSubscriptionId(logGroupId, linkTarget.Core.Id )
+                        logGroupName=logGroupName
+                        logFilterId=filter
+                        destination=linkTargetRoles.Outbound["logwatcher"].Destination
+                        role=roleRequired?then(
+                                forwardingRoleId,
+                                ""
+                        )
+                        dependencies=dependencies
+                    /]
+            [/#if]
+    [/#if]
 [/#macro]
 
 [#assign DASHBOARD_OUTPUT_MAPPINGS =
