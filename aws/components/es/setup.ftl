@@ -316,13 +316,12 @@
     [/#if]
 
     [#if solution.Logging ]
-        [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(lgId) ]
-            [@createLogGroup
-                id=lgId
-                name=lgName
-            /]
-
-        [/#if]
+        [@setupLogGroup
+            occurrence=subOccurrence
+            logGroupId=lgId
+            logGroupName=lgName
+            loggingProfile=loggingProfile
+        /]
     [/#if]
 
     [#if deploymentSubsetRequired("iam", true && isPartOfCurrentDeploymentUnit(esSnapshotRoleId)) ]

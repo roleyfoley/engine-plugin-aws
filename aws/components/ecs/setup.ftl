@@ -45,6 +45,8 @@
     [#local storageProfile = getStorage(occurrence, "ECS")]
     [#local logFileProfile = getLogFileProfile(occurrence, "ECS")]
     [#local bootstrapProfile = getBootstrapProfile(occurrence, "ECS")]
+    [#local networkProfile = getNetworkProfile(solution.Profiles.Network)]
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "OpsData", "AppData", "Encryption", "SSHKey" ] )]
@@ -72,8 +74,6 @@
     [#local routeTableLinkTarget = getLinkTarget(occurrence, networkLink + { "RouteTable" : occurrenceNetwork.RouteTable })]
     [#local routeTableConfiguration = routeTableLinkTarget.Configuration.Solution ]
     [#local publicRouteTable = routeTableConfiguration.Public ]
-
-    [#local networkProfile = getNetworkProfile(solution.Profiles.Network)]
 
     [#local ecsTags = getOccurrenceCoreTags(occurrence, ecsName, "", true)]
 
@@ -193,19 +193,21 @@
 
     [/#if]
 
-    [#if solution.ClusterLogGroup &&
-            deploymentSubsetRequired("lg", true) &&
-            isPartOfCurrentDeploymentUnit(ecsLogGroupId)]
-        [@createLogGroup
-            id=ecsLogGroupId
-            name=ecsLogGroupName /]
+    [#if solution.ClusterLogGroup ]
+        [@setupLogGroup
+            occurrence=occurrence
+            logGroupId=ecsLogGroupId
+            logGroupName=ecsLogGroupName
+            loggingProfile=loggingProfile
+        /]
     [/#if]
 
-    [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(ecsInstanceLogGroupId) ]
-        [@createLogGroup
-            id=ecsInstanceLogGroupId
-            name=ecsInstanceLogGroupName /]
-    [/#if]
+    [@setupLogGroup
+        occurrence=occurrence
+        logGroupId=ecsInstanceLogGroupId
+        logGroupName=ecsInstanceLogGroupName
+        loggingProfile=loggingProfile
+    /]
 
     [#if deploymentSubsetRequired("prologue", false)]
         [@addToDefaultBashScriptOutput
@@ -699,6 +701,7 @@
             )]
 
         [#local networkProfile = getNetworkProfile(solution.Profiles.Network)]
+        [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
         [#if engine == "fargate" && networkMode != "awsvpc" ]
             [@fatal
@@ -1375,27 +1378,28 @@
             [/#if]
         [/#if]
 
-        [#if deploymentSubsetRequired("lg", true) ]
-            [#if solution.TaskLogGroup ]
-                [#local lgId = resources["lg"].Id ]
-                [#local lgName = resources["lg"].Name]
-                [#if isPartOfCurrentDeploymentUnit(lgId) ]
-                    [@createLogGroup
-                        id=lgId
-                        name=lgName /]
-                [/#if]
-            [/#if]
-            [#list containers as container]
-                [#if container.LogGroup?has_content]
-                    [#local lgId = container.LogGroup.Id ]
-                    [#if isPartOfCurrentDeploymentUnit(lgId) ]
-                        [@createLogGroup
-                            id=lgId
-                            name=container.LogGroup.Name /]
-                    [/#if]
-                [/#if]
-            [/#list]
+        [#if solution.TaskLogGroup ]
+            [#local lgId = resources["lg"].Id ]
+            [#local lgName = resources["lg"].Name]
+            [@setupLogGroup
+                occurrence=subOccurrence
+                logGroupId=lgId
+                logGroupName=lgName
+                loggingProfile=loggingProfile
+            /]
         [/#if]
+
+        [#list containers as container]
+            [#if container.LogGroup?has_content]
+                [#local lgId = container.LogGroup.Id ]
+                    [@setupLogGroup
+                        occurrence=subOccurrence
+                        logGroupId=lgId
+                        logGroupName=container.LogGroup.Name
+                        loggingProfile=loggingProfile
+                    /]
+            [/#if]
+        [/#list]
 
         [#if deploymentSubsetRequired("ecs", true) ]
 

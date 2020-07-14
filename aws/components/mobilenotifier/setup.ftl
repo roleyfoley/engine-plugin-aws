@@ -31,6 +31,8 @@
         [#local successSampleRate = solution.SuccessSampleRate!successSampleRate ]
         [#local encryptionScheme = solution.EncryptionScheme!encryptionScheme]
 
+        [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
+
         [#local platformAppId = resources["platformapplication"].Id]
         [#local platformAppName = resources["platformapplication"].Name ]
         [#local engine = resources["platformapplication"].Engine ]
@@ -115,13 +117,19 @@
             isPartOfCurrentDeploymentUnit(lgId)]
 
             [#if engine != MOBILENOTIFIER_SMS_ENGINE]
-                [@createLogGroup
-                    id=lgId
-                    name=lgName /]
+                [@setupLogGroup
+                    occurrence=subOccurrence
+                    logGroupId=lgId
+                    logGroupName=lgName
+                    loggingProfile=loggingProfile
+                /]
 
-                [@createLogGroup
-                    id=lgFailureId
-                    name=lgFailureName /]
+                [@setupLogGroup
+                    occurrence=subOccurrence
+                    logGroupId=lgFailureId
+                    logGroupName=lgFailureName
+                    loggingProfile=loggingProfile
+                /]
             [/#if]
 
         [/#if]

@@ -28,6 +28,7 @@
     [#local logFileProfile   = getLogFileProfile(occurrence, "ComputeCluster")]
     [#local bootstrapProfile = getBootstrapProfile(occurrence, "ComputeCluster")]
     [#local networkProfile   = getNetworkProfile(solution.Profiles.Network)]
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "OpsData", "AppData", "Encryption", "SSHKey" ] )]
@@ -308,11 +309,12 @@
 
     [#local configSets += getInitConfigScriptsDeployment(scriptsFile, environmentVariables, solution.UseInitAsService, false)]
 
-    [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(computeClusterLogGroupId) ]
-        [@createLogGroup
-            id=computeClusterLogGroupId
-            name=computeClusterLogGroupName /]
-    [/#if]
+    [@setupLogGroup
+        occurrence=occurrence
+        logGroupId=computeClusterLogGroupId
+        logGroupName=computeClusterLogGroupName
+        loggingProfile=loggingProfile
+    /]
 
     [#local configSets +=
         getInitConfigLogAgent(

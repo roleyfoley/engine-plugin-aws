@@ -145,6 +145,7 @@
     [#local isRegionalEndpointType = endpointType == "REGIONAL" ]
 
     [#local securityProfile        = getSecurityProfile(solution.Profiles.Security, "apigateway")]
+    [#local loggingProfile         = getLoggingProfile(solution.Profiles.Logging)]
 
     [#local wafAclResources        = resources["wafacl"]!{} ]
     [#local cfResources            = resources["cf"]!{} ]
@@ -252,11 +253,13 @@
 
     [#local accessLgId   = resources["accesslg"].Id]
     [#local accessLgName = resources["accesslg"].Name]
-    [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(accessLgId) ]
-        [@createLogGroup
-            id=accessLgId
-            name=accessLgName /]
-    [/#if]
+
+    [@setupLogGroup
+        occurrence=occurrence
+        logGroupId=accessLgId
+        logGroupName=accessLgName
+        loggingProfile=loggingProfile
+    /]
 
     [#if deploymentSubsetRequired("apigateway", true)]
         [#-- Assume extended openAPI specification is in the ops bucket --]

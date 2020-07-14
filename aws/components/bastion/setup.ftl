@@ -65,6 +65,7 @@
     [#local logFileProfile = getLogFileProfile(occurrence, BASTION_COMPONENT_TYPE)]
     [#local bootstrapProfile = getBootstrapProfile(occurrence, BASTION_COMPONENT_TYPE)]
     [#local networkProfile = getNetworkProfile(solution.Profiles.Network)]
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
     [#local processorProfile = getProcessor(occurrence, "bastion")]
 
@@ -187,12 +188,12 @@
                     ))]
         [/#if]
 
-        [#if deploymentSubsetRequired("lg", true) &&
-                isPartOfCurrentDeploymentUnit(bastionLgId) ]
-            [@createLogGroup
-                id=bastionLgId
-                name=bastionLgName /]
-        [/#if]
+        [@setupLogGroup
+            occurrence=occurrence
+            logGroupId=bastionLgId
+            logGroupName=bastionLgName
+            loggingProfile=loggingProfile
+        /]
 
         [#local configSets +=
             getInitConfigLogAgent(
