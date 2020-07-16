@@ -24,3 +24,16 @@
         ]
     )]
 [/#function]
+
+[#function formatAccountSSMSessionManagerKMSKeyId ]
+    [#return formatAccountResourceId(AWS_CMK_RESOURCE_TYPE, "ssm" ) ]
+[/#function]
+
+[#function getAccountSSMSessionManagerKMSKeyId ]
+    [#if (accountObject.Console.Encryption.DedicatedKey)!false ||
+            getExistingReference(formatAccountSSMSessionManagerKMSKeyId)?has_content ]
+        [#return formatAccountSSMSessionManagerKMSKeyId() ]
+    [#else]
+        [#return formatAccountCMKTemplateId() ]
+    [/#if]
+[/#function]
