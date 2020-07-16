@@ -5,7 +5,8 @@
     region={ "Ref" : "AWS::Region" }]
 
     [#-- Account level Session Manager Resources --]
-    [#local accountEncryptionKeyId = formatAccountCMKTemplateId()]
+    [#local accountEncryptionKeyId = getAccountSSMSessionManagerKMSKeyId()]
+
     [#local logBucketId = formatAccountSSMSessionManagerLogBucketId()]
     [#local logBucketPrefix = formatAccountSSMSessionManagerLogBucketPrefix() ]
 
