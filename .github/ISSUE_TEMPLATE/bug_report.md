@@ -1,38 +1,31 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+title: '[BUG]'
+labels: 'bug'
+assignees: '@hamlet-io/engine-maintainers'
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Expected Behaviour
+<!-- Tell us what should happen -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## Current Behaviour
+<!-- Tell us what happens instead of the expected behaviour -->
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Possible Solution
+<!-- If you have one, suggest a fix/reason for the bug -->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## Steps to Reproduce
+<!-- Provide a link to a live example, or set of steps to reproduce this bug -->
+1.
+2.
+3.
+4.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Your Environment
+* CMDB Version used: <!-- listed in .cmdb in the root of your cmdb -->
+* Blueprint: <!-- output of "cot create blueprint" -->
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+<!-- please ensure you redact any secure or personally identifying information -->
+<!-- Include as many relevant details about the environment you experienced the bug in -->
