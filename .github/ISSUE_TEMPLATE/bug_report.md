@@ -8,10 +8,10 @@ assignees: '@hamlet-io/engine-maintainers'
 ---
 
 ## Expected Behaviour
-<!-- Tell us what should happen -->
+<!-- What did you think should happen? -->
 
 ## Current Behaviour
-<!-- What happens instead of the expected behaviour -->
+<!-- What happens instead? -->
 
 ## Possible Solution
 <!-- If you have one, suggest a fix/reason for the bug -->
