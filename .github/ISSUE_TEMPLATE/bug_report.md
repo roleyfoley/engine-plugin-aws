@@ -11,7 +11,7 @@ assignees: '@hamlet-io/engine-maintainers'
 <!-- Tell us what should happen -->
 
 ## Current Behaviour
-<!-- Tell us what happens instead of the expected behaviour -->
+<!-- What happens instead of the expected behaviour -->
 
 ## Possible Solution
 <!-- If you have one, suggest a fix/reason for the bug -->
