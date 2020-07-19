@@ -7,10 +7,10 @@ assignees: '@hamlet-io/engine-maintainers'
 
 ---
 ## Expected Behaviour
-<!-- How you think it might work -->
+<!-- How do you think it might work? -->
 
 ## Current Behaviour
-<!-- Difference from current behaviour if any -->
+<!-- Difference from current behaviour, if any -->
 
 ## Possible Solution
 <!-- Ideas of how to make this happen -->
