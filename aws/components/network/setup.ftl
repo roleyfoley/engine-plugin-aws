@@ -18,6 +18,8 @@
     [#local dnsSupport = (network.DNSSupport)!solution.DNS.UseProvider ]
     [#local dnsHostnames = (network.DNSHostnames)!solution.DNS.GenerateHostNames ]
 
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
+
     [#if (resources["flowlogs"]!{})?has_content ]
         [#local flowLogsResources = resources["flowlogs"]]
         [#local flowLogsRoleId = flowLogsResources["flowLogRole"].Id ]
@@ -39,17 +41,16 @@
             /]
         [/#if]
 
-        [#if deploymentSubsetRequired("lg", true) &&
-                isPartOfCurrentDeploymentUnit(flowLogsAllLogGroupId)]
-            [@createLogGroup
-                id=flowLogsAllLogGroupId
-                name=flowLogsAllLogGroupName
-                retention=((segmentObject.Operations.FlowLogs.Expiration) !
+        [@setupLogGroup
+            occurrence=occurrence
+            logGroupId=flowLogsAllLogGroupId
+            logGroupName=flowLogsAllLogGroupName
+            loggingProfile=loggingProfile
+            retention=((segmentObject.Operations.FlowLogs.Expiration) !
                             (segmentObject.Operations.Expiration) !
                             (environmentObject.Operations.FlowLogs.Expiration) !
                             (environmentObject.Operations.Expiration) ! 7)
-            /]
-        [/#if]
+        /]
 
         [#if deploymentSubsetRequired(NETWORK_COMPONENT_TYPE, true)]
             [@createVPCFlowLog

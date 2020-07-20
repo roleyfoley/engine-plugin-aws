@@ -45,6 +45,8 @@
     [#local operationsBucket = getExistingReference(baselineComponentIds["OpsData"]) ]
     [#local dataBucket = getExistingReference(baselineComponentIds["AppData"])]
 
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
+
     [#local vpcAccess = solution.VPCAccess ]
     [#if vpcAccess ]
         [#local networkLink = getOccurrenceNetwork(fn).Link!{} ]
@@ -254,13 +256,13 @@
     [/#if]
 
     [#if deploymentType == "REGIONAL" &&
-            solution.PredefineLogGroup &&
-            deploymentSubsetRequired("lg", true) &&
-            isPartOfCurrentDeploymentUnit(fnLgId) ]
-
-        [@createLogGroup
-            id=fnLgId
-            name=fnLgName /]
+            solution.PredefineLogGroup ]
+        [@setupLogGroup
+            occurrence=fn
+            logGroupId=fnLgId
+            logGroupName=fnLgName
+            loggingProfile=loggingProfile
+        /]
     [/#if]
 
 

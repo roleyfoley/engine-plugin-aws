@@ -29,6 +29,7 @@
     [#local logFileProfile         = getLogFileProfile(occurrence, "EC2")]
     [#local bootstrapProfile       = getBootstrapProfile(occurrence, "EC2")]
     [#local networkProfile         = getNetworkProfile(solution.Profiles.Network)]
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "OpsData", "AppData", "Encryption", "SSHKey" ] )]
@@ -304,11 +305,12 @@
         /]
     [/#if]
 
-    [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(ec2LogGroupId) ]
-        [@createLogGroup
-            id=ec2LogGroupId
-            name=ec2LogGroupName /]
-    [/#if]
+    [@setupLogGroup
+        occurrence=occurrence
+        logGroupId=ec2LogGroupId
+        logGroupName=ec2LogGroupName
+        loggingProfile=loggingProfile
+    /]
 
     [#local configSets +=
         getInitConfigLogAgent(

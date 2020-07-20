@@ -28,6 +28,8 @@
 
     [#local streamProcessors = []]
 
+    [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
+
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "AppData", "Encryption"] )]
     [#local baselineComponentIds = getBaselineComponentIds(baselineLinks)]
@@ -44,11 +46,15 @@
     [/#if]
 
     [#if logging ]
-        [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(streamLgId) ]
-            [@createLogGroup
-                id=streamLgId
-                name=streamLgName /]
 
+        [@setupLogGroup
+            occurrence=occurrence
+            logGroupId=streamLgId
+            logGroupName=streamLgName
+            loggingProfile=loggingProfile
+        /]
+
+        [#if deploymentSubsetRequired("lg", true) && isPartOfCurrentDeploymentUnit(streamLgId) ]
             [@createLogStream
                 id=streamLgStreamId
                 name=streamLgStreamName
@@ -67,8 +73,6 @@
     [/#if]
 
     [#list solution.LogWatchers as logWatcherName,logwatcher ]
-
-        [#local logFilter = (logFilters[logwatcher.LogFilter].Pattern)!"" ]
 
         [#local logSubscriptionRoleRequired = true ]
 
@@ -91,7 +95,7 @@
                         [@createLogSubscription
                             id=formatDependentLogSubscriptionId(streamId, logWatcherLink.Id, logGroupId?index)
                             logGroupName=getExistingReference(logGroupId)
-                            filter=logFilter
+                            logFilterId=logwatcher.LogFilter
                             destination=streamId
                             role=streamSubscriptionRoleId
                             dependencies=streamId

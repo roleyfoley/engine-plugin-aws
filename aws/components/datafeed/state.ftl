@@ -63,7 +63,11 @@
             "Roles" : {
                 "Outbound" : {
                     "default" : "produce",
-                    "produce" : firehoseStreamProducePermission(streamId)
+                    "produce" : firehoseStreamProducePermission(streamId),
+                    "logwatcher" : {
+                        "Destination" : getArn(streamId),
+                        "Policy" : firehoseStreamCloudwatchPermission(streamId)
+                    }
                 },
                 "Inbound" : {
                 }
