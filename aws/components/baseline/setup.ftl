@@ -112,22 +112,17 @@
                                         [#case SQS_COMPONENT_TYPE ]
                                             [#local resourceId = linkTargetResources["queue"].Id ]
                                             [#local resourceType = linkTargetResources["queue"].Type ]
-
-                                            [#local policyId =
-                                                formatS3NotificationPolicyId(
-                                                    bucketId,
-                                                    resourceId) ]
-
-                                            [#local bucketDependencies += [policyId] ]
-
-                                            [#if deploymentSubsetRequired("s3", true)]
-                                                [@createSQSPolicy
-                                                    id=policyId
-                                                    queues=resourceId
-                                                    statements=sqsS3WritePermission(resourceId, bucketName)
+                                            [#if ! (notification["aws:QueuePermissionMigration"]) ]
+                                                [@fatal
+                                                    message="Queue Permissions update required"
+                                                    detail=[
+                                                        "SQS policies have been migrated to the queue component",
+                                                        "For each S3 bucket add an inbound-invoke link from the Queue to the bucket",
+                                                        "When this is completed update the configuration of this notification to QueuePermissionMigration : true"
+                                                    ]?join(',')
+                                                    context=notification
                                                 /]
                                             [/#if]
-
                                             [#break]
 
                                         [#case LAMBDA_FUNCTION_COMPONENT_TYPE ]
@@ -140,15 +135,12 @@
                                                     resourceId) ]
 
                                             [#local bucketDependencies += [policyId] ]
-
-                                            [#if deploymentSubsetRequired("s3", true)]
-                                                [@createLambdaPermission
-                                                    id=policyId
-                                                    targetId=resourceId
-                                                    sourceId=bucketId
-                                                    sourcePrincipal="s3.amazonaws.com"
-                                                /]
-                                            [/#if]
+                                            [@createLambdaPermission
+                                                id=policyId
+                                                targetId=resourceId
+                                                sourceId=bucketId
+                                                sourcePrincipal="s3.amazonaws.com"
+                                            /]
 
                                             [#break]
 
@@ -161,14 +153,11 @@
                                                     resourceId) ]
 
                                             [#local bucketDependencies += [ policyId ]]
-
-                                            [#if deploymentSubsetRequired("s3", true )]
-                                                [@createSNSPolicy
-                                                    id=policyId
-                                                    topics=resourceId
-                                                    statements=snsS3WritePermission(resourceId, bucketName)
-                                                /]
-                                            [/#if]
+                                            [@createSNSPolicy
+                                                id=policyId
+                                                topics=resourceId
+                                                statements=snsS3WritePermission(resourceId, bucketName)
+                                            /]
                                     [/#switch]
 
                                     [#list notification.Events as event ]
