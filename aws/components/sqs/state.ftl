@@ -48,6 +48,10 @@
                         "Name" : name,
                         "Type" : AWS_SQS_RESOURCE_TYPE,
                         "Monitored" : true
+                    },
+                    "queuePolicy" : {
+                        "Id" : formatResourceId(AWS_SQS_POLICY_RESOURCE_TYPE, core.Id),
+                        "Type" : AWS_SQS_POLICY_RESOURCE_TYPE
                     }
                 } +
                 dlqRequired?then(

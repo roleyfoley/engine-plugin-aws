@@ -17,9 +17,15 @@
 
         [#local dlqRequired = (resources["dlq"]!{})?has_content ]
 
+        [#local queueIds = [ sqsId ]]
+        [#local sqsPolicyId = resources["queuePolicy"].Id ]
+        [#local queuePolicyStatements = [] ]
+
         [#if dlqRequired ]
             [#local dlqId = resources["dlq"].Id ]
             [#local dlqName = resources["dlq"].Name ]
+
+            [#local queueIds += [ dlqId ]]
             [@createSQSQueue
                 id=dlqId
                 name=dlqName
@@ -95,33 +101,29 @@
                 [#case "inbound" ]
                     [#switch linkRole ]
                         [#case "invoke" ]
-                            [#switch linkTargetCore.Type ]
-                                [#case TOPIC_COMPONENT_TYPE]
-                                    [#local topicId = linkTargetResources["topic"].Id ]
-                                    [#local policyId =
-                                            formatDependentPolicyId(
-                                                sqsId,
-                                                topicId) ]
-
-                                    [@createSQSPolicy
-                                        id=policyId
-                                        queues=sqsId
-                                        statements=sqsWritePermission(
-                                                        sqsId,
-                                                        {"Service" : linkTargetRoles.Inbound["invoke"].Principal},
-                                                        {
-                                                            "ArnEquals" : {
-                                                                "aws:sourceArn" : linkTargetRoles.Inbound["invoke"].SourceArn
-                                                            }
-                                                        },
-                                                        true)
-                                    /]
-                                    [#break]
-                            [/#switch]
+                            [#local queuePolicyStatements +=
+                                    sqsWritePermission(
+                                        sqsId,
+                                        {"Service" : linkTargetRoles.Inbound["invoke"].Principal},
+                                        {
+                                            "ArnEquals" : {
+                                                "aws:sourceArn" : linkTargetRoles.Inbound["invoke"].SourceArn
+                                            }
+                                        },
+                                        true)  ]
                             [#break]
                     [/#switch]
                     [#break]
             [/#switch]
         [/#list]
+
+
+        [#if queuePolicyStatements?has_content ]
+            [@createSQSPolicy
+                id=sqsPolicyId
+                queues=queueIds
+                statements=queuePolicyStatements
+            /]
+        [/#if]
     [/#if]
 [/#macro]

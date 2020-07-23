@@ -56,22 +56,17 @@
                             [#case SQS_COMPONENT_TYPE ]
                                 [#local resourceId = linkTargetResources["queue"].Id ]
                                 [#local resourceType = linkTargetResources["queue"].Type ]
-
-                                [#local policyId =
-                                    formatS3NotificationPolicyId(
-                                        s3Id,
-                                        resourceId) ]
-
-                                [#local dependencies += [policyId] ]
-
-                                [#if deploymentSubsetRequired("s3", true)]
-                                    [@createSQSPolicy
-                                        id=policyId
-                                        queues=resourceId
-                                        statements=sqsS3WritePermission(resourceId, s3Name)
+                                [#if ! (notification["aws:QueuePermissionMigration"]) ]
+                                    [@fatal
+                                        message="Queue Permissions update required"
+                                        detail=[
+                                            "SQS policies have been migrated to the queue component",
+                                            "For each S3 bucket add an inbound-invoke link from the Queue to the bucket",
+                                            "When this is completed update the configuration of this notification to QueuePermissionMigration : true"
+                                        ]
+                                        context=notification
                                     /]
                                 [/#if]
-
                                 [#break]
 
                             [#case LAMBDA_FUNCTION_COMPONENT_TYPE ]
