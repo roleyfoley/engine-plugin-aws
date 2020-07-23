@@ -173,6 +173,7 @@
     [#assign componentState =
         {
             "Resources" : {
+                "lb" : parentState.Resources["lb"],
                 "listener" : {
                     "Id" : listenerId,
                     "Type" : AWS_ALB_LISTENER_RESOURCE_TYPE

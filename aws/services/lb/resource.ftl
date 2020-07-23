@@ -99,6 +99,20 @@
                     "Output" : NAME_ATTRIBUTE_TYPE
                 }
             }
+        },
+        AWS_ALB_TARGET_GROUP_RESOURCE_TYPE : {
+            "Namespace" : "AWS/ApplicationELB",
+            "Dimensions" : {
+                "LoadBalancer" : {
+                    "OtherOutput" : {
+                        "Id" : "lb",
+                        "Property" : NAME_ATTRIBUTE_TYPE
+                    }
+                },
+                "TargetGroup" : {
+                    "Output" : NAME_ATTRIBUTE_TYPE
+                }
+            }
         }
     }
 ]
