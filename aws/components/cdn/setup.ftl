@@ -307,14 +307,30 @@
                 [#local routeBehaviours += configCacheBehaviour ]
                 [#break]
 
+
+
+
+            [#case LB_COMPONENT_TYPE ]
             [#case LB_PORT_COMPONENT_TYPE ]
+
+                [#switch originLinkTargetCore.Type ]
+                    [#case LB_COMPONENT_TYPE ]
+                        [#local originHostName = originLinkTargetAttributes["INTERNAL_FQDN"] ]
+                        [#local originPath = formatAbsolutePath( "", subSolution.Origin.BasePath ) ]
+                        [#break]
+
+                    [#case LB_PORT_COMPONENT_TYPE ]
+                        [#local originHostName = originLinkTargetAttributes["FQDN"] ]
+                        [#local originPath = formatAbsolutePath( originLinkTargetAttributes["PATH"], subSolution.Origin.BasePath ) ]
+                        [#break]
+                [/#switch]
 
                 [#local origin =
                             getCFHTTPOrigin(
                                 originId,
-                                originLinkTargetAttributes["FQDN"],
+                                originHostName,
                                 _context.CustomOriginHeaders,
-                                formatAbsolutePath( originLinkTargetAttributes["PATH"], subSolution.Origin.BasePath )
+                                originPath
                             )]
                 [#local origins += origin ]
 
