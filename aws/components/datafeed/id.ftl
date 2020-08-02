@@ -1,7 +1,14 @@
 [#ftl]
 [@addResourceGroupInformation
     type=DATAFEED_COMPONENT_TYPE
-    attributes=[]
+    attributes=[
+        {
+            "Names" : "WAFLogFeed",
+            "Description" : "Set up this datafeed to capture WAF Logs",
+            "Type" : BOOLEAN_TYPE,
+            "Default" : false
+        }
+    ]
     provider=AWS_PROVIDER
     resourceGroup=DEFAULT_RESOURCE_GROUP
     services=

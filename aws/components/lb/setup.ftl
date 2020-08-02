@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_lb_cf_generationcontract_solution occurrence ]
-    [@addDefaultGenerationContract subsets=["prologue", "template"] /]
+    [@addDefaultGenerationContract subsets=["prologue", "template", "cli", "epilogue" ] /]
 [/#macro]
 
 [#macro aws_lb_cf_setup_solution occurrence ]
@@ -720,9 +720,18 @@
 
     [#switch engine ]
         [#case "application"]
-            [#if deploymentSubsetRequired(LB_COMPONENT_TYPE, true) ]
-                [#-- Create a WAF ACL if required --]
-                [#if wafAclResources?has_content ]
+            [#if wafAclResources?has_content ]
+
+                [#local wafLoggingProfile = getLoggingProfile(wafSolution.Profiles.Logging) ]
+                [@createWAFLoggingFromProfile
+                    occurrence=occurrence
+                    wafaclId=wafAclResources.acl.Id
+                    loggingProfile=wafLoggingProfile
+                    regional=true
+                /]
+
+                [#if deploymentSubsetRequired(LB_COMPONENT_TYPE, true) ]
+                    [#-- Create a WAF ACL if required --]
                     [@createWAFAclFromSecurityProfile
                         id=wafAclResources.acl.Id
                         name=wafAclResources.acl.Name

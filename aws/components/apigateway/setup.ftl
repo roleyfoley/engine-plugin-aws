@@ -1,7 +1,7 @@
 [#ftl]
 
 [#macro aws_apigateway_cf_generationcontract_application occurrence ]
-    [@addDefaultGenerationContract subsets=["pregeneration", "prologue", "template", "epilogue", "config"] /]
+    [@addDefaultGenerationContract subsets=["pregeneration", "prologue", "template", "epilogue", "config", "cli" ] /]
 [/#macro]
 
 [#macro aws_apigateway_cf_setup_application occurrence ]
@@ -333,40 +333,6 @@
             dependencies=deployId
         /]
 
-        [#-- Create a WAF ACL if required --]
-        [#if wafAclResources?has_content ]
-            [@createWAFAclFromSecurityProfile
-                id=wafAclResources.acl.Id
-                name=wafAclResources.acl.Name
-                metric=wafAclResources.acl.Name
-                wafSolution=solution.WAF
-                securityProfile=securityProfile
-                occurrence=occurrence
-                regional=isRegionalEndpointType && (!cfResources?has_content) /]
-
-            [#if !cfResources?has_content]
-                [#-- Attach to API Gateway if no CloudFront distribution --]
-                [@createWAFAclAssociation
-                    id=wafAclResources.association.Id
-                    wafaclId=wafAclResources.acl.Id
-                    endpointId=
-                        formatRegionalArn(
-                            "apigateway",
-                            {
-                                "Fn::Join": [
-                                    "/",
-                                    [
-                                        "/restapis",
-                                        getReference(apiId),
-                                        "stages",
-                                        stageName
-                                    ]
-                                ]
-                            }
-                        ) /]
-            [/#if]
-        [/#if]
-
         [#-- Create a CloudFront distribution if required --]
         [#if cfResources?has_content]
             [#local origin =
@@ -544,6 +510,56 @@
 
         [/#list]
     [/#if]
+
+    [#-- Create a WAF ACL if required --]
+    [#if wafAclResources?has_content ]
+
+        [#local wafRegional = isRegionalEndpointType && (!cfResources?has_content) ]
+        [#local wafLoggingProfile = getLoggingProfile(solution.WAF.Profiles.Logging) ]
+
+        [@createWAFLoggingFromProfile
+            occurrence=occurrence
+            wafaclId=wafAclResources.acl.Id
+            loggingProfile=wafLoggingProfile
+            regional=wafRegional
+        /]
+
+        [#if deploymentSubsetRequired("apigateway", true)]
+            [@createWAFAclFromSecurityProfile
+                id=wafAclResources.acl.Id
+                name=wafAclResources.acl.Name
+                metric=wafAclResources.acl.Name
+                wafSolution=solution.WAF
+                securityProfile=securityProfile
+                occurrence=occurrence
+                regional=wafRegional
+            /]
+
+            [#if !cfResources?has_content]
+                [#-- Attach to API Gateway if no CloudFront distribution --]
+                [@createWAFAclAssociation
+                    id=wafAclResources.association.Id
+                    wafaclId=wafAclResources.acl.Id
+                    endpointId=
+                        formatRegionalArn(
+                            "apigateway",
+                            {
+                                "Fn::Join": [
+                                    "/",
+                                    [
+                                        "/restapis",
+                                        getReference(apiId),
+                                        "stages",
+                                        stageName
+                                    ]
+                                ]
+                            }
+                        ) /]
+            [/#if]
+        [/#if]
+    [/#if]
+
+
 
     [#-- API Docs have been deprecated - keeping the S3 clear makes sure we can delete the buckets --]
     [#local docs = resources["docs"]!{} ]
