@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_cdn_cf_generationcontract_solution occurrence ]
-    [@addDefaultGenerationContract subsets=["template", "epilogue"] /]
+    [@addDefaultGenerationContract subsets=["template", "epilogue", "cli" ] /]
 [/#macro]
 
 [#macro aws_cdn_cf_setup_solution occurrence ]
@@ -475,14 +475,26 @@
             wafAclId=valueIfTrue(wafAclId, wafPresent)
         /]
 
-        [#if wafPresent ]
+    [/#if]
+
+    [#if wafPresent ]
+        [#local wafLoggingProfile = getLoggingProfile(solution.WAF.Profiles.Logging) ]
+        [@createWAFLoggingFromProfile
+            occurrence=occurrence
+            wafaclId=wafAclId
+            loggingProfile=wafLoggingProfile
+            regional=false
+        /]
+
+        [#if deploymentSubsetRequired(CDN_COMPONENT_TYPE, true)]
             [@createWAFAclFromSecurityProfile
                 id=wafAclId
                 name=wafAclName
                 metric=wafAclName
                 wafSolution=solution.WAF
                 securityProfile=securityProfile
-                occurrence=occurrence /]
+                occurrence=occurrence
+            /]
         [/#if]
     [/#if]
 

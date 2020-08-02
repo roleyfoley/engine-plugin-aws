@@ -5,7 +5,12 @@
     [#local solution = occurrence.Configuration.Solution]
 
     [#local streamId = formatResourceId(AWS_KINESIS_FIREHOSE_STREAM_RESOURCE_TYPE, core.Id)]
-    [#local streamName = core.FullName]
+
+    [#if solution["aws:WAFLogFeed"]]
+        [#local streamName = formatName( "aws-waf-logs", core.FullName )]
+    [#else]
+        [#local streamName = core.FullName ]
+    [/#if]
 
     [#local lgId = formatLogGroupId(core.Id)]
     [#assign componentState =
