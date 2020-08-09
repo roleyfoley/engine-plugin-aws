@@ -1847,6 +1847,20 @@
         }
       }
     }
+  },
+  "ServiceRoles" : {
+    "autoscaling" : {
+      "Enabled" : true,
+      "ServiceName" : "autoscaling.amazonaws.com"
+    },
+    "ecs" : {
+      "Enabled" : true,
+      "ServiceName" : "ecs.amazonaws.com"
+    },
+    "es" : {
+      "Enabled" : true,
+      "ServiceName" : "es.amazonaws.com"
+    }
   }
 }
   /]
