@@ -5,6 +5,7 @@
 [#assign AWS_IAM_MANAGED_POLICY_RESOURCE_TYPE = "managedPolicy" ]
 [#assign AWS_IAM_ROLE_RESOURCE_TYPE="role" ]
 [#assign AWS_IAM_USER_RESOURCE_TYPE="user"]
+[#assign AWS_IAM_SERVICE_LINKED_ROLE_RESOURCE_TYPE="serviceLinkedRole" ]
 
 [#function formatPolicyId ids...]
     [#return formatResourceId(
@@ -70,6 +71,13 @@
                 extensions)]
 [/#function]
 
+
+[#function formatAccountServiceLinkedRoleId type extensions...]
+    [#return formatAccountResourceId(
+                AWS_IAM_SERVICE_LINKED_ROLE_RESOURCE_TYPE,
+                type,
+                extensions)]
+[/#function]
 
 [#function formatServiceLinkedRoleArn trustedService roleName ]
     [#return
