@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_ecs_cf_generationcontract_solution occurrence ]
-    [@addDefaultGenerationContract subsets=[ "prologue", "template", "cli", "epilogue" ] /]
+    [@addDefaultGenerationContract subsets=[ "template", "cli", "epilogue" ] /]
 [/#macro]
 
 [#macro aws_ecs_cf_setup_solution occurrence ]
@@ -208,21 +208,6 @@
         logGroupName=ecsInstanceLogGroupName
         loggingProfile=loggingProfile
     /]
-
-    [#if deploymentSubsetRequired("prologue", false)]
-        [@addToDefaultBashScriptOutput
-            content=[
-                " case $\{STACK_OPERATION} in",
-                "   create|update)",
-                "       create_iam_service_linked_role" +
-                "       \"" + region + "\" " +
-                "       \"ecs.amazonaws.com\" " +
-                "       || return $?",
-                "       ;;",
-                " esac"
-            ]
-        /]
-    [/#if]
 
     [#local configSets +=
         getInitConfigLogAgent(

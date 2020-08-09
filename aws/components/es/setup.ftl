@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_es_cf_generationcontract_solution occurrence ]
-    [@addDefaultGenerationContract subsets=["prologue", "template", "epilogue" ] /]
+    [@addDefaultGenerationContract subsets=["template", "epilogue" ] /]
 [/#macro]
 
 [#macro aws_es_cf_setup_solution occurrence ]
@@ -49,18 +49,10 @@
                     )
                 }]
 
-        [#if deploymentSubsetRequired("prologue", false)]
-            [@addToDefaultBashScriptOutput
-                content=[
-                    " case $\{STACK_OPERATION} in",
-                    "   create|update)",
-                    "       create_iam_service_linked_role" +
-                    "       \"" + region + "\" " +
-                    "       \"es.amazonaws.com\" " +
-                    "       || return $?",
-                    "       ;;",
-                    " esac"
-                ]
+        [#if ! isSerivceLinkedRoleDeployed("es.amazonaws.com") ]
+            [@fatal
+                message="es.amazonaws.com service linked role not deployed"
+                detail="Run an account level iam deployment to enable the service"
             /]
         [/#if]
     [/#if]
