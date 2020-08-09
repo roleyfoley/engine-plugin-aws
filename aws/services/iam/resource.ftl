@@ -183,7 +183,7 @@
 [/#macro]
 
 [#-- Check that service linked role exists --]
-[#fucntion isSerivceLinkedRoleDeployed serviceName ]
+[#function isSerivceLinkedRoleDeployed serviceName ]
     [#assign deployed = false ]
     [#list getReferenceData(SERVICEROLE_REFERENCE_TYPE) as id,ServiceRole ]
         [#if ServiceRole.ServiceName == serviceName ]
