@@ -122,3 +122,7 @@
 [#function formatEC2AccountVolumeEncryptionId ]
     [#return formatAccountResourceId("volumeencrypt")]
 [/#function]
+
+[#function formatEc2AccountVolumeEncryptionKMSKeyId ]
+    [#return formatAccountResourceId(AWS_CMK_RESOURCE_TYPE, "volumeencrypt" ) ]
+[/#function]
