@@ -155,3 +155,40 @@
     resourceType=AWS_IAM_USER_RESOURCE_TYPE
     mappings=USER_OUTPUT_MAPPINGS
 /]
+
+
+
+[#macro createServiceLinkedRole id
+        serviceName
+        customSuffix=""
+        description=""
+        dependencies=[] ]
+
+    [@cfResource
+        id=id
+        type="AWS::IAM::ServiceLinkedRole"
+        properties={
+            "AWSServiceName" : serviceName
+        } +
+        attributeIfContent(
+            "CustomSuffix",
+            customSuffix
+        ) +
+        attributeIfContent(
+            "Description",
+            description
+        )
+        dependencies=dependencies
+    /]
+[/#macro]
+
+[#-- Check that service linked role exists --]
+[#fucntion isSerivceLinkedRoleDeployed serviceName ]
+    [#assign deployed = false ]
+    [#list getReferenceData(SERVICEROLE_REFERENCE_TYPE) as id,ServiceRole ]
+        [#if ServiceRole.ServiceName == serviceName ]
+            [#assign deployed = getExistingReference( formatAccountServiceLinkedRoleId(id) )?has_content ]
+        [/#if]
+    [/#list]
+    [#return deployed]
+[/#function]
