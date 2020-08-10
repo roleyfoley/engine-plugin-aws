@@ -17,6 +17,7 @@
 
 [#assign testScenarios = [
     "db",
+    "filetransfer",
     "lb"
 ]]
 
