@@ -27,6 +27,12 @@
 
     [#local managedPolicyArns = []]
 
+    [#local fileTransferUser = false ]
+    [#if (resources["transferRole"]!{})?has_content]
+        [#local fileTransferUser = true]
+        [#local transferRoleId = resources["transferRole"].Id ]
+    [/#if]
+
     [#local passwordEncryptionScheme = (solution.GenerateCredentials.EncryptionScheme?has_content)?then(
         solution.GenerateCredentials.EncryptionScheme?ensure_ends_with(":"),
         "" )]
@@ -64,7 +70,8 @@
             "DefaultCoreVariables" : false,
             "DefaultEnvironmentVariables" : false,
             "DefaultLinkVariables" : false,
-            "Policy" : standardPolicies(occurrence, baselineComponentIds)
+            "Policy" : standardPolicies(occurrence, baselineComponentIds),
+            "TransferMounts" : {}
         }
     ]
 
@@ -72,6 +79,13 @@
         [#local fragmentId = formatFragmentId(_context)]
         [#include fragmentList?ensure_starts_with("/")]
     [/#if]
+
+    [#local sshPublicKeys = {}]
+    [#list solution.SSHPublicKeys as id,publicKey ]
+        [#if (_context.DefaultEnvironment[publicKey.SettingName])?has_content ]
+            [#local sshPublicKeys = mergeObjects(sshPublicKeys, { id : _context.DefaultEnvironment[publicKey.SettingName] }) ]
+        [/#if]
+    [/#list]
 
     [#if deploymentSubsetRequired("prologue", false)]
         [@addToDefaultBashScriptOutput
@@ -133,6 +147,36 @@
          [/#if]
     [/#if]
 
+
+    [#if fileTransferUser]
+        [#if deploymentSubsetRequired("iam", true) &&
+                isPartOfCurrentDeploymentUnit(transferRoleId)]
+
+            [#local transferLinks = {} ]
+            [#list (_context.Links) as id, linkTarget ]
+                [#if linkTarget.Core.Type == S3_COMPONENT_TYPE ]
+                    [#local transferLinks = mergeObjects(transferLinks, { id, linkTarget}) ]
+                [/#if]
+            [/#list]
+
+            [#local transferLinkPolicies = getLinkTargetsOutboundRoles(transferLinks)]
+
+            [@createRole
+                id=transferRoleId
+                trustedServices=["transfer.amazonaws.com" ]
+                policies=
+                    [] +
+                    arrayIfContent(
+                        [getPolicyDocument(_context.Policy, "fragment")],
+                        _context.Policy) +
+                    arrayIfContent(
+                        [getPolicyDocument(transferLinkPolicies, "links")],
+                        transferLinkPolicies)
+
+            /]
+        [/#if]
+    [/#if]
+
     [#if deploymentSubsetRequired(USER_COMPONENT_TYPE, true)]
         [@cfResource
             id=userId
@@ -150,6 +194,8 @@
 
         [#-- Manage API keys for the user if linked to usage plans --]
         [#local apikeyNeeded = false ]
+        [#local transferRoleRequired = false ]
+
         [#list solution.Links?values as link]
             [#if link?is_hash]
                 [#local linkTarget = getLinkTarget(occurrence, link, false) ]
@@ -161,6 +207,7 @@
                 [/#if]
 
                 [#local linkTargetResources = linkTarget.State.Resources ]
+                [#local linkTargetAttributes = linkTarget.State.Attributes ]
 
                 [#switch linkTarget.Core.Type]
                     [#case APIGATEWAY_USAGEPLAN_COMPONENT_TYPE ]
@@ -172,6 +219,38 @@
                             /]
                         [/#if]
                         [#local apikeyNeeded = true]
+                        [#break]
+
+                    [#case FILETRANSFER_COMPONENT_TYPE ]
+                        [#if isLinkTargetActive(linkTarget) ]
+
+                            [#if ! sshPublicKeys?has_content ]
+                                [@fatal
+                                    message="No Public SSH Keys found"
+                                    detail="Add an SSH Key to this user using the SSHPublicKeys Configuration"
+                                    context={
+                                        "SSHPublicKeys" : solution.SSHPublicKeys
+                                    }
+                                /]
+                            [/#if]
+
+                            [#if ! (_context.TransferMounts)?has_content ]
+                                [@fatal
+                                    message="No Tranfer Mount Locations found"
+                                    detail="Add at least one transfer mount using the userTransferMount fragment macro"
+                                /]
+                            [/#if]
+
+                            [@createTransferUser
+                                id=resources["transferUsers"][link.Id].Id
+                                username=resources["transferUsers"][link.Id].UserName
+                                homeDirectoryMappings=_context.TransferMounts?values
+                                roleId=resources["transferRole"].Id
+                                transferServerId=linkTargetResources["transferserver"].Id
+                                sshPublicKeys=sshPublicKeys?values
+                                tags=getOccurrenceCoreTags(occurrence, userName)
+                            /]
+                        [/#if]
                         [#break]
                 [/#switch]
             [/#if]

@@ -11,6 +11,42 @@
                     solution.GenerateCredentials.EncryptionScheme?ensure_ends_with(":"),
                     "" )]
 
+    [#local linkResources = {} ]
+
+    [#local transferUserName = core.Name ]
+    [#local transferUser = false]
+
+    [#list solution.Links?values as link]
+        [#if link?is_hash]
+            [#local linkTarget = getLinkTarget(occurrence, link, false) ]
+
+            [@debug message="Link Target" context=linkTarget enabled=false /]
+
+            [#if !linkTarget?has_content]
+                [#continue]
+            [/#if]
+
+            [#switch linkTarget.Core.Type]
+                [#case FILETRANSFER_COMPONENT_TYPE]
+                    [#local linkResources = mergeObjects( linkResources, {
+                        "transferUsers" : {
+                            link.Id  :{
+                                "Id" : formatResourceId(AWS_TRANSFER_USER_RESOURCE_TYPE, core.Id, link.Id ),
+                                "UserName" : transferUserName,
+                                "Type" : AWS_TRANSFER_USER_RESOURCE_TYPE
+                            }
+                        },
+                        "transferRole" : {
+                            "Id" : formatResourceId(AWS_IAM_ROLE_RESOURCE_TYPE, core.Id, "transfer" ),
+                            "Type" : AWS_IAM_ROLE_RESOURCE_TYPE
+                        }
+                    })]
+                    [#local transferUser = true]
+                    [#break]
+            [/#switch]
+        [/#if]
+    [/#list]
+
     [#-- Use short full name for user as there is a length limit of 64 chars --]
     [#assign componentState =
         {
@@ -25,14 +61,19 @@
                     "Name" : core.FullName,
                     "Type" : AWS_APIGATEWAY_APIKEY_RESOURCE_TYPE
                 }
-            },
+            } + linkResources,
             "Attributes" : {
                 "USERNAME" : getExistingReference(userId),
                 "ARN" : userArn,
                 "ACCESS_KEY" : getExistingReference(userId, USERNAME_ATTRIBUTE_TYPE),
                 "SECRET_KEY" : getExistingReference(userId, PASSWORD_ATTRIBUTE_TYPE)?ensure_starts_with(encryptionScheme),
                 "SES_SMTP_PASSWORD" : getExistingReference(userId, KEY_ATTRIBUTE_TYPE)?ensure_starts_with(encryptionScheme)
-            },
+            } +
+            attributeIfTrue(
+                "FILETRANSFER_USERNAME",
+                transferUser,
+                transferUserName
+            ),
             "Roles" : {
                 "Inbound" : {
                     "invoke" : {
