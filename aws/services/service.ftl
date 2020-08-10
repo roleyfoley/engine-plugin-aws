@@ -17,6 +17,7 @@
 [#assign AWS_ELASTIC_CONTAINER_SERVICE = "ecs"]
 [#assign AWS_ELASTIC_FILE_SYSTEM_SERVICE = "efs"]
 [#assign AWS_ELASTIC_LOAD_BALANCER_SERVICE = "lb"]
+[#assign AWS_TRANSFER_SERVICE = "transfer" ]
 [#assign AWS_IDENTITY_SERVICE = "iam"]
 [#assign AWS_KEY_MANAGEMENT_SERVICE = "kms"]
 [#assign AWS_KINESIS_SERVICE = "kinesis"]
