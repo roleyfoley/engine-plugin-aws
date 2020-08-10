@@ -35,7 +35,7 @@
     [#local dependencies = []]
 
     [#if deploymentSubsetRequired("lg", true) &&
-            isPartOfCurrentDeploymentUnit(logGroupId)]
+            isPartOfCurrentDeploymentUnit(logGroupId) ]
         [@createLogGroup
             id=logGroupId
             name=logGroupName
