@@ -964,6 +964,16 @@
                         [/#list]
                     [/#if]
 
+                    [#if container.LinkIngressRules?has_content ]
+                        [#list container.LinkIngressRules as linkIngressRule ]
+                            [@createSecurityGroupIngressFromNetworkRule
+                                occurrence=subOccurrence
+                                groupId=ecsSecurityGroupId
+                                networkRule=linkIngressRule
+                            /]
+                        [/#list]
+                    [/#if]
+
                     [#if !(networkProfile.BaseSecurityGroup.Outbound.GlobalAllow)
                             && container.EgressRules?has_content ]
                         [#list container.EgressRules as egressRule ]
