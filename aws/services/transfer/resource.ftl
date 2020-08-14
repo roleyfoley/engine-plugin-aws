@@ -55,6 +55,7 @@
             protocols
             vpcDetails
             logRoleId
+            securityPolicy
             certificateId=""
             dependencies=[]
             tags=[]
@@ -67,7 +68,8 @@
                 "EndpointType" : "VPC",
                 "IdentityProviderType" : "SERVICE_MANAGED",
                 "LoggingRole" : getReference(logRoleId, ARN_ATTRIBUTE_TYPE),
-                "Protocols" : asArray( protocols )?map( protocol -> protocol?upper_case)
+                "Protocols" : asArray( protocols )?map( protocol -> protocol?upper_case),
+                "SecurityPolicy" : securityPolicy
             } +
             attributeIfContent(
                 "Certificate",

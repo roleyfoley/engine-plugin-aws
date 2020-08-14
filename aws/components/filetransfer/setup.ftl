@@ -23,6 +23,7 @@
 
     [#local networkProfile = getNetworkProfile(solution.Profiles.Network)]
     [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
+    [#local securityProfile = getSecurityProfile(solution.Profiles.Security, FILETRANSFER_COMPONENT_TYPE)]
 
     [#local occurrenceNetwork = getOccurrenceNetwork(occurrence) ]
     [#local networkLink = occurrenceNetwork.Link!{} ]
@@ -164,6 +165,7 @@
             vpcDetails=vpcDetails
             logRoleId=logRoleId
             certificateId=certificateId
+            securityPolicy=securityProfile.EncryptionPolicy
             tags=getOccurrenceCoreTags(occurrence, transferServerName, "", false)
         /]
 
