@@ -49,7 +49,7 @@
                     )
                 }]
 
-        [#if ! isSerivceLinkedRoleDeployed("es.amazonaws.com") ]
+        [#if ! isServiceLinkedRoleDeployed("es.amazonaws.com") ]
             [@fatal
                 message="es.amazonaws.com service linked role not deployed"
                 detail="Run an account level iam deployment to enable the service"
