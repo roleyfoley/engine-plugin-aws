@@ -351,7 +351,13 @@
     ]
 [/#function]
 
-[#function getInitConfigEFSMount mountId efsId directory osMount ignoreErrors=false priority=4 ]
+[#function getInitConfigEFSMount mountId efsId directory osMount accessPointId="" iamEnabled=true  ignoreErrors=false priority=4 ]
+
+    [#local createMount = true]
+    [#if directory == "/" ]
+        [#local createMount = false ]
+    [/#if]
+
     [#return
         {
             "${priority}_EFSMount_" + mountId : {
@@ -361,7 +367,10 @@
                         "env" : {
                             "EFS_FILE_SYSTEM_ID" : efsId,
                             "EFS_MOUNT_PATH" : directory,
-                            "EFS_OS_MOUNT_PATH" : "/mnt/clusterstorage/" + osMount
+                            "EFS_OS_MOUNT_PATH" : "/mnt/clusterstorage/" + osMount,
+                            "EFS_ACCESS_POINT_ID" : accessPointId,
+                            "EFS_IAM_ENABLED" : iamEnabled,
+                            "EFS_CREATE_MOUNT" : createMount
                         },
                         "ignoreErrors" : ignoreErrors
                     }
