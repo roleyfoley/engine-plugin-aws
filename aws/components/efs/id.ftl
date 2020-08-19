@@ -1,7 +1,14 @@
 [#ftl]
 [@addResourceGroupInformation
     type=EFS_COMPONENT_TYPE
-    attributes=[]
+    attributes=[
+        {
+            "Names" : "IAMRequired",
+            "Description" : "Require IAM Access to EFS",
+            "Type" : BOOLEAN_TYPE,
+            "Default" : false
+        }
+    ]
     provider=AWS_PROVIDER
     resourceGroup=DEFAULT_RESOURCE_GROUP
     services=

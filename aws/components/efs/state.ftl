@@ -14,8 +14,8 @@
             {
                 zone.Id : {
                     "efsMountTarget" : {
-                        "Id" : formatDependentResourceId(AWS_EFS_MOUNTTARGET_RESOURCE_TYPE, id, zone.Id),
-                        "Type" : AWS_EFS_MOUNTTARGET_RESOURCE_TYPE
+                        "Id" : formatDependentResourceId(AWS_EFS_MOUNT_TARGET_RESOURCE_TYPE, id, zone.Id),
+                        "Type" : AWS_EFS_MOUNT_TARGET_RESOURCE_TYPE
                     }
                 }
             }
@@ -39,7 +39,8 @@
                 "Zones" : zoneResources
             },
             "Attributes" : {
-                "EFS" : getExistingReference(id)
+                "EFS" : getExistingReference(id),
+                "DIRECTORY" : "/"
             },
             "Roles" : {
                 "Inbound" : {
@@ -49,6 +50,10 @@
                     }
                 },
                 "Outbound" : {
+                    "default" : "root",
+                    "write" : efsWritePermission(id),
+                    "read" : efsReadPermission(id),
+                    "root" : efsFullPermission(id),
                     "networkacl" : {
                         "Ports" : [ availablePorts ],
                         "SecurityGroups" : getExistingReference(securityGroupId),
@@ -61,24 +66,41 @@
 [/#macro]
 
 [#macro aws_efsmount_cf_state occurrence parent={} ]
-    [#local configuration = occurrence.Configuration.Solution]
+    [#local core = occurrence.Core ]
+    [#local solution = occurrence.Configuration.Solution]
 
-    [#local efsId = parent.State.Attributes["EFS"] ]
+    [#local efsId = parent.State.Resources["efs"].Id ]
+    [#local accessPointId = formatResourceId(AWS_EFS_ACCESS_POINT_RESOURCE_TYPE, core.Id) ]
 
     [#local parentRoles = parent.State.Roles ]
 
     [#assign componentState =
         {
-            "Resources" : {},
+            "Resources" : {
+                "accessPoint" :  {
+                    "Id" : accessPointId,
+                    "Name" : core.FullName,
+                    "Type" : AWS_EFS_ACCESS_POINT_RESOURCE_TYPE
+                }
+            },
             "Attributes" : {
-                "EFS" : efsId,
-                "DIRECTORY" : configuration.Directory
+                "EFS" : getExistingReference(efsId),
+                "DIRECTORY" : (solution.chroot)?then(
+                                    "/"
+                                    solution.Directory
+                                ),
+                "ACCESS_POINT_ID": getExistingReference(accessPointId),
+                "ACCESS_POINT_ARN" : getExistingReference(accessPointId, ARN_ATTRIBUTE_TYPE)
             },
             "Roles" : {
                 "Inbound" : {
                     "networkacl" : parentRoles.Inbound["networkacl"]
                 },
                 "Outbound" : {
+                    "default" : "root",
+                    "write" : efsWritePermission(efsId, accessPointId),
+                    "read" : efsReadPermission(efsId, accessPointId),
+                    "root" : efsFullPermission(efsId, accessPointId),
                     "networkacl" : parentRoles.Outbound["networkacl"]
                 }
             }

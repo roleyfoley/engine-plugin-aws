@@ -100,12 +100,32 @@
         /]
 
         [@createEFS
-            tier=core.Tier
             id=efsId
-            name=efsFullName
-            component=core.Component
+            tags=getOccurrenceCoreTags(occurrence, efsFullName, "", false)
             encrypted=solution.Encrypted
             kmsKeyId=cmkKeyId
+            iamRequired=solution["aws:IAMRequired"]
+            resourcePolicyStatements=
+                getPolicyStatement(
+                    [
+                        "elasticfilesystem:ClientMount"
+                    ],
+                    "",
+                    {
+                        "AWS" : {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "arn:aws:iam::",
+                                    {
+                                        "Ref": "AWS::AccountId"
+                                    },
+                                    ":root"
+                                ]
+                            ]
+                        }
+                    }
+                )
         /]
 
         [#list zones as zone ]
@@ -118,4 +138,33 @@
             /]
         [/#list]
     [/#if ]
+
+    [#-- Subcomponents --]
+    [#list occurrence.Occurrences![] as subOccurrence]
+
+        [#local subCore = subOccurrence.Core ]
+        [#local subSolution = subOccurrence.Configuration.Solution ]
+        [#local subResources = subOccurrence.State.Resources ]
+
+        [#if subCore.Type == EFS_MOUNT_COMPONENT_TYPE ]
+
+            [#local efsAccessPointId = subResources["accessPoint"].Id ]
+            [#local efsAccessPointName = subResources["accessPoint"].Name ]
+
+            [#if deploymentSubsetRequired(EFS_COMPONENT_TYPE, true) ]
+                [@createEFSAccessPoint
+                    id=efsAccessPointId
+                    efsId=efsId
+                    tags=getOccurrenceCoreTags(occurrence, efsAccessPointName, "", false)
+                    overidePermissions=subSolution.Ownership.Enforced
+                    chroot=subSolution.chroot
+                    uid=subSolution.Ownership.UID
+                    gid=subSolution.Ownership.GID
+                    secondaryGids=subSolution.Ownership.SecondaryGIDS
+                    permissions=subSolution.Ownership.Permissions
+                    rootPath=subSolution.Directory
+                /]
+            [/#if]
+        [/#if]
+    [/#list]
 [/#macro]
