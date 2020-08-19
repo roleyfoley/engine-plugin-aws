@@ -4,44 +4,55 @@
     {
         REFERENCE_ATTRIBUTE_TYPE : {
             "UseRef" : true
-        },
-        ARN_ATTRIBUTE_TYPE : {
+        }
+    }
+]
+
+[#assign EFS_MOUNT_TARGET_MAPPINGS =
+    {
+        REFERENCE_ATTRIBUTE_TYPE : {
             "UseRef" : true
         }
     }
 ]
 
-[#assign EFS_MOUNTTARGET_MAPPINGS =
+[#assign EFS_ACCESS_POINT_MAPPINGS =
     {
         REFERENCE_ATTRIBUTE_TYPE : {
             "UseRef" : true
         },
         ARN_ATTRIBUTE_TYPE : {
-            "UseRef" : true
+            "Attribute" : "Arn"
         }
     }
 ]
 
-[@addOutputMapping 
+[@addOutputMapping
     provider=AWS_PROVIDER
     resourceType=AWS_EFS_RESOURCE_TYPE
     mappings=EFS_OUTPUT_MAPPINGS
 /]
 
-[@addOutputMapping 
+[@addOutputMapping
     provider=AWS_PROVIDER
-    resourceType=AWS_EFS_MOUNTTARGET_RESOURCE_TYPE
-    mappings=EFS_MOUNTTARGET_MAPPINGS
+    resourceType=AWS_EFS_MOUNT_TARGET_RESOURCE_TYPE
+    mappings=EFS_MOUNT_TARGET_MAPPINGS
 /]
 
-[#macro createEFS id name tier component encrypted kmsKeyId]
+[@addOutputMapping
+    provider=AWS_PROVIDER
+    resourceType=AWS_EFS_ACCESS_POINT_RESOURCE_TYPE
+    mappings=EFS_ACCESS_POINT_MAPPINGS
+/]
+
+[#macro createEFS id tags encrypted kmsKeyId iamRequired=true resourcePolicyStatements=[]  ]
     [@cfResource
         id=id
         type="AWS::EFS::FileSystem"
         properties=
             {
                 "PerformanceMode" : "generalPurpose",
-                "FileSystemTags" : getCfTemplateCoreTags(name, tier, component)
+                "FileSystemTags" : tags
             } +
             encrypted?then(
                 {
@@ -49,6 +60,11 @@
                     "KmsKeyId" : getReference(kmsKeyId, ARN_ATTRIBUTE_TYPE)
                 },
                 {}
+            ) +
+            attributeIfTrue(
+                "FileSystemPolicy",
+                iamRequired,
+                getPolicyDocumentContent(resourcePolicyStatements)
             )
         outputs=EFS_OUTPUT_MAPPINGS
     /]
@@ -67,7 +83,54 @@
                 "FileSystemId" : getReference(efsId),
                 "SecurityGroups": getReferences(securityGroups)
             }
-        outputs=EFS_MOUNTTARGET_MAPPINGS
+        outputs=EFS_MOUNT_TARGET_MAPPINGS
+        dependencies=dependencies
+    /]
+[/#macro]
+
+[#macro createEFSAccessPoint id efsId tags
+        overidePermissions=false
+        chroot=false
+        uid=""
+        gid=""
+        secondaryGids=""
+        permissions=""
+        rootPath=""
+    ]
+
+    [@cfResource
+        id=id
+        type="AWS::EFS::AccessPoint"
+        properties=
+            {
+                "FileSystemId" : getReference(efsId),
+                "AccessPointTags" : tags
+            } +
+            attributeIfTrue(
+                "PosixUser",
+                overidePermissions,
+                {
+                    "Uid" : uid,
+                    "Gid" : gid
+                } +
+                attributeIfContent(
+                    "SecondaryGids",
+                    secondaryGids
+                )
+            ) +
+            attributeIfTrue(
+                "RootDirectory",
+                chroot,
+                {
+                    "CreationInfo" : {
+                        "OwnerUid" : uid,
+                        "OwnerGid" : gid,
+                        "Permissions" : permissions
+                    },
+                    "Path" : rootPath?remove_ending("/")?ensure_starts_with("/")
+                }
+            )
+        outputs=EFS_ACCESS_POINT_MAPPINGS
         dependencies=dependencies
     /]
 [/#macro]
