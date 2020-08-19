@@ -233,14 +233,15 @@
             /]
 
             [#switch linkTargetCore.Type]
-
+                [#case EFS_COMPONENT_TYPE ]
                 [#case EFS_MOUNT_COMPONENT_TYPE]
                     [#local configSets +=
                         getInitConfigEFSMount(
                             linkTargetCore.Id,
-                            linkTargetAttributes["EFS"],
-                            linkTargetAttributes["DIRECTORY"],
-                            linkId
+                            linkTargetAttributes.EFS,
+                            linkTargetAttributes.DIRECTORY,
+                            link.Id,
+                            (linkTargetAttributes.ACCESS_POINT_ID)!""
                         )]
                     [#break]
             [/#switch]

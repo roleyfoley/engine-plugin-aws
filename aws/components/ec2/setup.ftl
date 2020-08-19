@@ -152,7 +152,7 @@
         [#if deploymentSubsetRequired(EC2_COMPONENT_TYPE, true)]
             [@createSecurityGroupRulesFromLink
                 occurrence=occurrence
-                groupId=computeClusterSecurityGroupId
+                groupId=ec2SecurityGroupId
                 linkTarget=linkTarget
                 inboundPorts=ec2SecurityGroupPorts
                 networkProfile=networkProfile
@@ -192,13 +192,15 @@
                         [#break]
                     [/#switch]
                 [#break]
+            [#case EFS_COMPONENT_TYPE ]
             [#case EFS_MOUNT_COMPONENT_TYPE]
                 [#local configSets +=
                     getInitConfigEFSMount(
                         linkTargetCore.Id,
-                        linkTargetAttributes["EFS"],
-                        linkTargetAttributes["DIRECTORY"],
-                        link.Id
+                        linkTargetAttributes.EFS,
+                        linkTargetAttributes.DIRECTORY,
+                        link.Id,
+                        (linkTargetAttributes.ACCESS_POINT_ID)!""
                     )]
                 [#break]
 
@@ -472,7 +474,7 @@
                     outputs={}
                 /]
 
-                [#if fixedIP]
+                [#if fixedIP || publicRouteTable]
                     [@createEIP
                         id=zoneEc2EIPId
                         dependencies=[zoneEc2ENIId]
