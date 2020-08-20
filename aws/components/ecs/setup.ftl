@@ -255,7 +255,7 @@
                             linkTargetCore.Id,
                             linkTargetAttributes.EFS,
                             linkTargetAttributes.DIRECTORY,
-                            link.Id,
+                            linkId,
                             (linkTargetAttributes.ACCESS_POINT_ID)!""
                         )]
                     [#break]
