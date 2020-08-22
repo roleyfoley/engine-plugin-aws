@@ -122,42 +122,68 @@
             ]
 
             [#if ! volumeNames?seq_contains(name) ]
+                [#local dockerVolumeConfiguration = {}]
+                [#local efsVolumeConfiguration = {}]
 
-                [#local dockerVolumeConfiguration = {} +
-                    volume.PersistVolume?then(
-                        {
-                            "Scope" : "shared",
-                            "Autoprovision", volume.AutoProvision
-                        },
-                        {}
-                    ) +
-                    (volume.Driver != "local")?then(
-                        {
-                            "Driver" : volume.Driver
-                        },
-                        {}
-                    ) +
-                    (volume.DriverOpts?has_content)?then(
-                        {
-                            "DriverOpts" : volume.DriverOpts
-                        },
-                        {}
-                    )
-                ]
+                [#switch volume.Driver ]
+                    [#case "efs" ]
+                        [#local efsVolumeConfiguration +=
+                            {
+                                "FilesystemId" : volume.EFS.FileSystemId,
+                                "TransitEncryption" : "ENABLED",
+                                "AuthorizationConfig" : {
+                                    "IAM" : "ENABLED"
+                                } +
+                                attributeIfContent(
+                                    "AccessPointId",
+                                    (volume.EFS.AccessPointId)!""
+                                )
+                            }
+                        ]
+                        [#break]
+                    [#default]
+
+                        [#local dockerVolumeConfiguration +=
+                            volume.PersistVolume?then(
+                                {
+                                    "Scope" : "shared",
+                                    "Autoprovision", volume.AutoProvision
+                                },
+                                {}
+                            ) +
+                            (volume.Driver != "local")?then(
+                                {
+                                    "Driver" : volume.Driver
+                                },
+                                {}
+                            ) +
+                            (volume.DriverOpts?has_content)?then(
+                                {
+                                    "DriverOpts" : volume.DriverOpts
+                                },
+                                {}
+                            )
+                        ]
+                [/#switch]
+
 
                 [#local volumes +=
                     [
                         {
                             "Name" : name
                         } +
-                        attributeIfTrue(
+                        attributeIfContent(
                             "Host",
-                            volume.HostPath?has_content,
-                            {"SourcePath" : volume.HostPath!""}) +
-                        attributeIfTrue(
+                            volume.HostPath,
+                            {"SourcePath" : volume.HostPath!""}
+                        ) +
+                        attributeIfContent(
                             "DockerVolumeConfiguration",
-                            dockerVolumeConfiguration?has_content,
                             dockerVolumeConfiguration
+                        ) +
+                        attributeIfContent(
+                            "EFSVolumeConfiguration",
+                            efsVolumeConfiguration
                         )
                     ]
                 ]
@@ -283,6 +309,7 @@
             loadBalancers
             serviceRegistries
             engine
+            platformVersion=""
             networkMode=""
             networkConfiguration={}
             placement={}
@@ -339,6 +366,11 @@
                 "LaunchType",
                 engine == "fargate",
                 engine?upper_case
+            ) +
+            attributeIfTrue(
+                "PlatformVersion",
+                ( engine == "fargate" && platformVersion?upper_case != "LATEST" ),
+                platformVersion?upper_case
             ) +
             attributeIfContent(
                 "NetworkConfiguration",

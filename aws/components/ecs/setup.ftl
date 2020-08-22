@@ -1185,6 +1185,7 @@
                     networkMode=networkMode
                     networkConfiguration=aswVpcNetworkConfiguration!{}
                     placement=solution.Placement
+                    platformVersion=solution["aws:FargatePlatform"]
                     dependencies=dependencies
                 /]
             [/#if]
@@ -1316,7 +1317,8 @@
 
                     [#if engine == "fargate" ]
                         [#local ecsParameters += {
-                            "LaunchType" : "FARGATE"
+                            "LaunchType" : "FARGATE",
+                            "PlatformVersion" : solution["aws:FargatePlatform"]
                         }]
                     [/#if]
 
