@@ -16,3 +16,33 @@
             AWS_SYSTEMS_MANAGER_SERVICE
         ]
 /]
+
+[@addResourceGroupInformation
+    type=ECS_SERVICE_COMPONENT_TYPE
+    attributes=[
+        {
+            "Names" : "FargatePlatform",
+            "Description" : "The version of the fargate platform to use",
+            "Type" : STRING_TYPE,
+            "Default" : "LATEST"
+        }
+    ]
+    provider=AWS_PROVIDER
+    resourceGroup=DEFAULT_RESOURCE_GROUP
+    services=[]
+/]
+
+[@addResourceGroupInformation
+    type=ECS_TASK_COMPONENT_TYPE
+    attributes=[
+        {
+            "Names" : "FargatePlatform",
+            "Description" : "The version of the fargate platform to use",
+            "Type" : STRING_TYPE,
+            "Default" : "LATEST"
+        }
+    ]
+    provider=AWS_PROVIDER
+    resourceGroup=DEFAULT_RESOURCE_GROUP
+    services=[]
+/]
