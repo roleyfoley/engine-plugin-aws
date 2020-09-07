@@ -8,7 +8,7 @@
     [#local solution = occurrence.Configuration.Solution ]
     [#local buildReference = getOccurrenceBuildReference(occurrence, true ) ]
 
-    [#local dataSetDeploymentUnit = (solution.DeploymentUnits[0])!"" ]
+    [#local dataSetDeploymentUnit = getOccurrenceDeploymentUnit(occurrence)!"" ]
 
     [#local attributes = {
             "DATASET_ENGINE" : solution.Engine

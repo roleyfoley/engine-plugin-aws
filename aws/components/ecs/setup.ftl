@@ -663,7 +663,8 @@
 
     [#list requiredOccurrences(
             occurrence.Occurrences![],
-            getDeploymentUnit()) as subOccurrence]
+            getDeploymentUnit(),
+            getDeploymentGroup()) as subOccurrence]
 
         [@debug message="Suboccurrence" context=subOccurrence enabled=false /]
 
