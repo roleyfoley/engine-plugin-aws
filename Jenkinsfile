@@ -1,8 +1,10 @@
 #!groovy
 
+def slackChannel = '#devops-framework'
+
 pipeline {
     options {
-        timestamps()
+        durabilityHint('PERFORMANCE_OPTIMIZED')
     }
 
     agent {
@@ -32,6 +34,16 @@ pipeline {
                     wait: false
                 )
             }
+        }
+    }
+
+    post {
+        failure {
+            slackSend (
+                message: "*Failure* | <${BUILD_URL}|${JOB_NAME}>",
+                channel: "${slackChannel}",
+                color: "#D20F2A"
+            )
         }
     }
 }
