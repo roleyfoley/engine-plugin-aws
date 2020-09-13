@@ -3,7 +3,6 @@
 pipeline {
     options {
         timestamps()
-        quietPeriod(30)
     }
 
     agent {
@@ -12,9 +11,6 @@ pipeline {
 
     stages {
         stage('Run AWS Template Tests') {
-            agent {
-                label 'hamlet-latest'
-            }
             environment {
                 GENERATION_PLUGIN_DIRS="${WORKSPACE}"
             }
