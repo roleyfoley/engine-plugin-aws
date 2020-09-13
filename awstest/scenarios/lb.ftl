@@ -116,7 +116,7 @@
                     "OutputSuffix" : "template.json",
                     "Tools" : {
                         "CFNLint" : true,
-                        "CFNNag" : true
+                        "CFNNag" : false
                     }
                 }
             },
