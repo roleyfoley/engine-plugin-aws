@@ -69,7 +69,7 @@
         [/#if]
     [/#list]
 
-    [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
+    [#if deploymentSubsetRequired(FEDERATEDROLE_COMPONENT_TYPE, true) ]
         [@createIdentityPool
             id=identityPoolId
             name=identityPoolName
@@ -263,7 +263,7 @@
         /]
     [/#if]
 
-    [#if deploymentSubsetRequired(USERPOOL_COMPONENT_TYPE, true) ]
+    [#if deploymentSubsetRequired(FEDERATEDROLE_COMPONENT_TYPE, true) ]
         [@createIdentityPoolRoleMapping
             id=roleMappingId
             identityPoolId=identityPoolId
