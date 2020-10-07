@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_lambda_cf_generationcontract_application occurrence ]
+[#macro aws_lambda_cf_deployment_generationcontract_application occurrence ]
     [@addDefaultGenerationContract subsets=["prologue", "template", "config", "epilogue"] /]
 [/#macro]
 
-[#macro aws_lambda_cf_setup_application occurrence ]
+[#macro aws_lambda_cf_deployment_application occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#list occurrence.Occurrences as fn]
@@ -12,7 +12,7 @@
 [/#macro]
 
 [#-- Rename once we switch to the context model for processing --]
-[#macro aws_functionxx_cf_application occurrence ]
+[#macro aws_functionxx_cf_deployment_application occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#if deploymentSubsetRequired("generationcontract", false)]

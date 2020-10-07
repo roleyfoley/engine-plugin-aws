@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_computecluster_cf_generationcontract_application occurrence ]
+[#macro aws_computecluster_cf_deployment_generationcontract_application occurrence ]
     [@addDefaultGenerationContract subsets="template" /]
 [/#macro]
 
-[#macro aws_computecluster_cf_setup_application occurrence ]
+[#macro aws_computecluster_cf_deployment_application occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core ]

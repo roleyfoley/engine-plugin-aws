@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_externalnetwork_cf_generationcontract_segment occurrence ]
+[#macro aws_externalnetwork_cf_deployment_generationcontract_segment occurrence ]
     [@addDefaultGenerationContract subsets=[ "template", "cli", "epilogue" ] /]
 [/#macro]
 
-[#macro aws_externalnetwork_cf_setup_segment occurrence ]
+[#macro aws_externalnetwork_cf_deployment_segment occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local parentCore = occurrence.Core ]

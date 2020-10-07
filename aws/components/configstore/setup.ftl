@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_configstore_cf_generationcontract_solution occurrence ]
+[#macro aws_configstore_cf_deployment_generationcontract_solution occurrence ]
     [@addDefaultGenerationContract subsets=["template", "epilogue", "cli"] /]
 [/#macro]
 
-[#macro aws_configstore_cf_setup_solution occurrence ]
+[#macro aws_configstore_cf_deployment occurrence_solution ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local parentCore = occurrence.Core]

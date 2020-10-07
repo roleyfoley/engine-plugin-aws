@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_datapipeline_cf_generationcontract_application occurrence ]
+[#macro aws_datapipeline_cf_deployment_generationcontract_application occurrence ]
     [@addDefaultGenerationContract subsets=["prologue", "template", "epilogue", "cli", "config"] /]
 [/#macro]
 
-[#macro aws_datapipeline_cf_setup_application occurrence ]
+[#macro aws_datapipeline_cf_deployment_application occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core ]

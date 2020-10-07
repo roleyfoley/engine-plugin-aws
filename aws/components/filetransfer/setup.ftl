@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_filetransfer_cf_generationcontract_solution occurrence ]
+[#macro aws_filetransfer_cf_deployment_generationcontract_solution occurrence ]
     [@addDefaultGenerationContract subsets=[ "prologue", "template", "epilogue" ] /]
 [/#macro]
 
-[#macro aws_filetransfer_cf_setup_solution occurrence ]
+[#macro aws_filetransfer_cf_deployment_solution occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core]
