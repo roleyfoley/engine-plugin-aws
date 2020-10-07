@@ -19,7 +19,7 @@ echo ""
 echo "--- Generating Management Contract ---"
 echo ""
 
-${GENERATION_DIR}/createTemplate.sh -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -l unitlist
+${GENERATION_DIR}/createTemplate.sh -e unitlist -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}"
 UNIT_LIST=`jq -r '.Stages[].Steps[].Parameters | "-l \(.DeploymentGroup) -u \(.DeploymentUnit)"' < ${TEST_OUTPUT_DIR}/unitlist-managementcontract.json`
 readarray -t UNIT_LIST <<< "${UNIT_LIST}"
 
@@ -27,7 +27,8 @@ for unit in "${UNIT_LIST[@]}";  do
     echo ""
     echo "--- Generating $unit ---"
     echo ""
-    ${GENERATION_DIR}/createTemplate.sh -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -x ${unit} || exit $?
+    ${GENERATION_DIR}/createTemplate.sh -e deployment -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -x ${unit} || exit $?
+    ${GENERATION_DIR}/createTemplate.sh -e deploymenttest -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -x ${unit} || exit $?
 done
 
 echo ""
