@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_network_cf_generationcontract_segment occurrence ]
+[#macro aws_network_cf_deployment_generationcontract_segment occurrence ]
     [@addDefaultGenerationContract subsets="template" /]
 [/#macro]
 
-[#macro aws_network_cf_setup_segment occurrence ]
+[#macro aws_network_cf_deployment_segment occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core ]

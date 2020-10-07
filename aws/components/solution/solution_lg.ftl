@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_lg_cf_generationcontract_solution occurrence ]
+[#macro aws_lg_cf_deployment_generationcontract_solution occurrence ]
      [@addDefaultGenerationContract subsets="template" /]
 [/#macro]
 
-[#macro aws_lg_cf_setup_solution occurrence ]
+[#macro aws_lg_cf_deployment_solution occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local componentLogGroupId = formatComponentLogGroupId(tier, component)]

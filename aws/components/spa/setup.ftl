@@ -1,5 +1,5 @@
 [#ftl]
-[#macro aws_spa_cf_generationcontract_solution occurrence ]
+[#macro aws_spa_cf_deployment_generationcontract_solution occurrence ]
     [@addDefaultGenerationContract subsets=[] /]
     [@error
         message="Solution SPA Deprecation"
@@ -7,11 +7,11 @@
     /]
 [/#macro]
 
-[#macro aws_spa_cf_generationcontract_application occurrence  ]
+[#macro aws_spa_cf_deployment_generationcontract_application occurrence  ]
     [@addDefaultGenerationContract subsets=["prologue", "config", "epilogue" ] /]
 [/#macro]
 
-[#macro aws_spa_cf_setup_application occurrence  ]
+[#macro aws_spa_cf_deployment_application occurrence  ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core ]

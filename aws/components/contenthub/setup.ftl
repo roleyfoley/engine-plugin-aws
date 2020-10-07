@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_contenthub_cf_generationcontract_solution occurrence ]
+[#macro aws_contenthub_cf_deployment_generationcontract_solution occurrence ]
     [@addDefaultGenerationContract subsets="prologue" /]
 [/#macro]
 
-[#macro aws_contenthub_cf_setup_solution occurrence ]
+[#macro aws_contenthub_cf_deployment_solution occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core]

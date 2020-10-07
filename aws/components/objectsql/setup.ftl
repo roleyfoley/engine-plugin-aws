@@ -1,9 +1,9 @@
 [#ftl]
-[#macro aws_objectsql_cf_generationcontract_solution occurrence ]
+[#macro aws_objectsql_cf_deployment_generationcontract_solution occurrence ]
     [@addDefaultGenerationContract subsets=["cli", "prologue"] /]
 [/#macro]
 
-[#macro aws_objectsql_cf_setup_solution occurrence ]
+[#macro aws_objectsql_cf_deployment_solution occurrence ]
     [@debug message="Entering" context=occurrence enabled=true /]
 
     [#local core = occurrence.Core ]

@@ -1,10 +1,10 @@
 [#ftl]
 
-[#macro aws_apigateway_cf_generationcontract_application occurrence ]
+[#macro aws_apigateway_cf_deployment_generationcontract_application occurrence ]
     [@addDefaultGenerationContract subsets=["pregeneration", "prologue", "template", "epilogue", "config", "cli" ] /]
 [/#macro]
 
-[#macro aws_apigateway_cf_setup_application occurrence ]
+[#macro aws_apigateway_cf_deployment_application occurrence ]
     [@debug message="Entering" context=occurrence enabled=false /]
 
     [#local core = occurrence.Core ]
