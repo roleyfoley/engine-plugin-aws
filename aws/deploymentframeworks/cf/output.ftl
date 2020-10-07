@@ -225,7 +225,12 @@
     [#if include?has_content]
         [#include include?ensure_starts_with("/")]
     [#else]
-        [@processComponents level /]
+        [@processModelFlow
+            level=level
+            framework=CLOUD_FORMATION_DEPLOYMENT_FRAMEWORK
+            model=commandLineOptions.Deployment.Framework.Model
+            flow=commandLineOptions.Deployment.Framework.Flow
+        /]
     [/#if]
 
     [#if getOutputContent("resources")?has_content || logMessages?has_content]
