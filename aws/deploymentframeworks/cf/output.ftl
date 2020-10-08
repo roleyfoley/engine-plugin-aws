@@ -225,11 +225,10 @@
     [#if include?has_content]
         [#include include?ensure_starts_with("/")]
     [#else]
-        [@processModelFlow
+        [@processFlows
             level=level
             framework=CLOUD_FORMATION_DEPLOYMENT_FRAMEWORK
-            model=commandLineOptions.Deployment.Framework.Model
-            flow=commandLineOptions.Deployment.Framework.Flow
+            flows=commandLineOptions.Flow.Names
         /]
     [/#if]
 
