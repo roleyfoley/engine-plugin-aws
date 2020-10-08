@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 echo "###############################################"
 echo "# Running template tests for the AWS provider #"
@@ -19,7 +20,16 @@ echo ""
 echo "--- Generating Management Contract ---"
 echo ""
 
-${GENERATION_DIR}/createTemplate.sh -e unitlist -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}"
+default_args=(
+    '-i mock'
+    '-p aws'
+    '-p awstest'
+    '-f cf'
+    "-o ${TEST_OUTPUT_DIR}"
+    '-x'
+)
+
+${GENERATION_DIR}/createTemplate.sh -e unitlist ${default_args[@]}
 UNIT_LIST=`jq -r '.Stages[].Steps[].Parameters | "-l \(.DeploymentGroup) -u \(.DeploymentUnit)"' < ${TEST_OUTPUT_DIR}/unitlist-managementcontract.json`
 readarray -t UNIT_LIST <<< "${UNIT_LIST}"
 
@@ -27,8 +37,11 @@ for unit in "${UNIT_LIST[@]}";  do
     echo ""
     echo "--- Generating $unit ---"
     echo ""
-    ${GENERATION_DIR}/createTemplate.sh -e deployment -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -x ${unit} || exit $?
-    ${GENERATION_DIR}/createTemplate.sh -e deploymenttest -i mock -p aws -p awstest -o "${TEST_OUTPUT_DIR}" -x ${unit} || exit $?
+
+    unit_args=("${default_args[@]}" "${unit}")
+
+    ${GENERATION_DIR}/createTemplate.sh -e deploymenttest ${unit_args[@]}
+    ${GENERATION_DIR}/createTemplate.sh -e deployment ${unit_args[@]}
 done
 
 echo ""
