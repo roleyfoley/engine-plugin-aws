@@ -238,8 +238,6 @@
                         "Ports" : [ "ssh" ],
                         "IPAddressGroups" :
                             sshEnabled?then(
-                                (segmentObject.SSH.IPAddressGroups)!
-                                (segmentObject.IPAddressGroups)!
                                 (segmentObject.Bastion.IPAddressGroups)![],
                                 []
                             ),
