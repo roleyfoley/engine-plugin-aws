@@ -238,7 +238,7 @@
                         "Ports" : [ "ssh" ],
                         "IPAddressGroups" :
                             sshEnabled?then(
-                                (segmentObject.Bastion.IPAddressGroups)![],
+                                (segmentObject.Bastion.IPAddressGroups)!(segmentObject.IPAddressGroups)![],
                                 []
                             ),
                         "Description" : "Bastion Access Groups"
