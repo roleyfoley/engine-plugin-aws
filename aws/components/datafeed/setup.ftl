@@ -238,14 +238,23 @@
                                                 cmkKeyId,
                                                 streamBackupLoggingConfiguration )]
 
+        [#-- Establish bucket prefixes --]
+        [#local streamS3DestinationPrefix = solution.Bucket.Prefix]
+        [#local streamS3DestinationErrorPrefix = solution.Bucket.ErrorPrefix]
 
         [#switch (destinationLink.Core.Type)!"notfound" ]
+            [#case BASELINE_DATA_COMPONENT_TYPE]
+                [#if destinationLink.Core.SubComponent.Name == "opsdata"]
+                    [#local streamS3DestinationPrefix = formatRelativePath(streamS3DestinationPrefix, core.FullAbsolutePath)]
+                    [#local streamS3DestinationErrorPrefix = formatRelativePath(streamS3DestinationErrorPrefix, core.FullAbsolutePath)]
+                [/#if]
+                [#-- continue to s3 case --]
             [#case S3_COMPONENT_TYPE ]
                 [#local s3Id = destinationLink.State.Resources["bucket"].Id ]
                 [#local streamS3Destination = getFirehoseStreamS3Destination(
                                                 s3Id,
-                                                solution.Bucket.Prefix,
-                                                solution.Bucket.ErrorPrefix,
+                                                streamS3DestinationPrefix,
+                                                streamS3DestinationErrorPrefix,
                                                 solution.Buffering.Interval,
                                                 solution.Buffering.Size,
                                                 streamRoleId,
