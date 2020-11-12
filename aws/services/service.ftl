@@ -1,6 +1,9 @@
 [#ftl]
 
 [#-- Services --]
+[#assign AWS_AMAZONMQ_SERVICE = "amazonmq" ]
+[@addService provider=AWS_PROVIDER service=AWS_AMAZONMQ_SERVICE /]
+
 [#assign AWS_APIGATEWAY_SERVICE = "apigateway"]
 [@addService provider=AWS_PROVIDER service=AWS_APIGATEWAY_SERVICE /]
 
