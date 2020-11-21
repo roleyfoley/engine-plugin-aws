@@ -882,7 +882,15 @@
                 "AutoScalingRollingUpdate" : {
                     "WaitOnResourceSignals" : autoScalingConfig.WaitForSignal,
                     "MinInstancesInService" : autoscalingMinUpdateInstances,
-                    "PauseTime" : "PT" + autoScalingConfig.UpdatePauseTime
+                    "MinSuccessfulInstancesPercent" : autoScalingConfig.MinSuccessInstances,
+                    "PauseTime" : "PT" + autoScalingConfig.UpdatePauseTime,
+                    "SuspendProcesses" : [
+                        "HealthCheck",
+                        "ReplaceUnhealthy",
+                        "AZRebalance",
+                        "AlarmNotification",
+                        "ScheduledActions"
+                    ]
                 }
             }
         )
