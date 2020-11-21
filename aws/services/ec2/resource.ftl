@@ -58,6 +58,36 @@
     ]
 [/#function]
 
+[#function getInitConfigOSPatching schedule securityOnly=false ignoreErrors=false priority=1 ]
+    [#local updateCommand = "yum clean all && yum -y update"]
+    [#return
+        {
+            "${priority}_SecurityUpdates" : {
+                "commands": {
+                    "InitialUpdate" : {
+                        "command" : updateCommand,
+                        "ignoreErrors" : ignoreErrors
+                    }
+                } +
+                securityOnly?then(
+                    {
+                        "DailySecurity" : {
+                            "command" : 'echo \"${schedule} ${updateCommand} --security >> /var/log/update.log 2>&1\" >crontab.txt && crontab crontab.txt',
+                            "ignoreErrors" : ignoreErrors
+                        }
+                    },
+                    {
+                        "DailyUpdates" : {
+                            "command" : 'echo \"${schedule} ${updateCommand} >> /var/log/update.log 2>&1\" >crontab.txt && crontab crontab.txt',
+                            "ignoreErrors" : ignoreErrors
+                        }
+                    }
+                )
+            }
+        }
+    ]
+[/#function]
+
 [#function getInitConfigBootstrap occurrence operationsBucket dataBucket ignoreErrors=false priority=1 ]
     [#local role = (occurrence.Configuration.Settings.Product["Role"].Value)!""]
     [#return
@@ -701,14 +731,6 @@
     outputId=""
 ]
 
-    [#assign updateCommand = "yum clean all && yum -y update"]
-    [#assign dailyUpdateCron = 'echo \"59 13 * * * ${updateCommand} >> /var/log/update.log 2>&1\" >crontab.txt && crontab crontab.txt']
-    [#if environmentId == "prod"]
-        [#-- for production update only security packages --]
-        [#assign updateCommand += " --security"]
-        [#assign dailyUpdateCron = 'echo \"29 13 * * 6 ${updateCommand} >> /var/log/update.log 2>&1\" >crontab.txt && crontab crontab.txt']
-    [/#if]
-
     [@cfResource
         id=id
         type="AWS::AutoScaling::LaunchConfiguration"
@@ -737,9 +759,6 @@
                             [
                                 "#!/bin/bash -ex\n",
                                 "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n",
-                                "# Install updates\n",
-                                updateCommand, "\n",
-                                dailyUpdateCron, "\n",
                                 "yum install -y aws-cfn-bootstrap\n",
                                 "# Remainder of configuration via metadata\n",
                                 "/opt/aws/bin/cfn-init -v",

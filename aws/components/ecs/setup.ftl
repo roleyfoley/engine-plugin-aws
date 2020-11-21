@@ -35,6 +35,8 @@
 
     [#local cliRequired = false ]
 
+    [#local managedTermination = false ]
+
     [#local hibernate = solution.Hibernate.Enabled && isOccurrenceDeployed(occurrence)]
 
     [#local processorProfile = getProcessor(occurrence, "ECS")]
@@ -77,11 +79,20 @@
 
     [#local environmentVariables = {}]
 
+    [#local osPatching = mergeObjects(solution.OSPatching, environmentObject.OSPatching )]
+
     [#local configSetName = occurrence.Core.Type]
     [#local configSets =
             getInitConfigDirectories() +
             getInitConfigBootstrap(occurrence, operationsBucket, dataBucket) +
-            getInitConfigECSAgent(ecsId, defaultLogDriver, solution.DockerUsers, solution.VolumeDrivers ) ]
+            getInitConfigECSAgent(ecsId, defaultLogDriver, solution.DockerUsers, solution.VolumeDrivers ) +
+            osPatching.Enabled?then(
+                getInitConfigOSPatching(
+                    osPatching.Schedule,
+                    osPatching.SecurityOnly
+                ),
+                {}
+            ) ]
 
     [#local efsMountPoints = {}]
 
@@ -384,7 +395,6 @@
         [/#if]
 
         [#local capacityProviderScalingPolicy = { "managedScaling" : false, "managedTermination" : false } ]
-        [#local managedTermination = false ]
 
         [#if solution.HostScalingPolicies?has_content ]
             [#list solution.HostScalingPolicies as name, scalingPolicy ]
