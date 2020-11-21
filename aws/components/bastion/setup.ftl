@@ -77,9 +77,18 @@
                 "DesiredCount" : sshActive?then(1,0)
     }]
 
+    [#local osPatching = mergeObjects(solution.OSPatching, environmentObject.OSPatching )]
+
     [#local configSets =
             getInitConfigDirectories() +
-            getInitConfigBootstrap(occurrence, operationsBucket, dataBucket)]
+            getInitConfigBootstrap(occurrence, operationsBucket, dataBucket) +
+            osPatching.Enabled?then(
+                getInitConfigOSPatching(
+                    osPatching.Schedule,
+                    osPatching.SecurityOnly
+                ),
+                {}
+            )]
 
     [#local fragment = getOccurrenceFragmentBase(occurrence) ]
 

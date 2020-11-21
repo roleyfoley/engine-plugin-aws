@@ -63,10 +63,19 @@
     [#local environmentVariables = {}]
 
     [#local configSetName = occurrence.Core.Type]
+
+    [#local osPatching = mergeObjects(solution.OSPatching, environmentObject.OSPatching )]
     [#local configSets =
             getInitConfigDirectories() +
             getInitConfigBootstrap(occurrence, operationsBucket, dataBucket) +
-            getInitConfigPuppet() ]
+            getInitConfigPuppet() +
+            osPatching.Enabled?then(
+                getInitConfigOSPatching(
+                    osPatching.Schedule,
+                    osPatching.SecurityOnly
+                ),
+                {}
+            ) ]
 
     [#local efsMountPoints = {}]
 

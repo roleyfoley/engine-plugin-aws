@@ -1461,6 +1461,10 @@
     }
   },
   "LogFiles": {
+    "/var/log/update.log": {
+      "FilePath": "/var/log/update.log",
+      "TimeFormat": "%b %d %H:%M:%S"
+    },
     "/var/log/cfn-init.log": {
       "FilePath": "/var/log/cfn-init.log",
       "TimeFormat": "%b %d %H:%M:%S"
@@ -1504,6 +1508,7 @@
     },
     "aws-system": {
       "LogFiles": [
+        "/var/log/update.log",
         "/var/log/cfn-init.log",
         "/var/log/cfn-init-cmd.log",
         "/var/log/cloud-init.log",
