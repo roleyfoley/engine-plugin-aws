@@ -115,7 +115,7 @@
                                         "Handler": "src/run.lambda_handler",
                                         "PredefineLogGroup" : true,
                                         "Profiles" : {
-                                            "Logging" : "nofoward"
+                                            "Logging" : "noforward"
                                         },
                                         "Links": {
                                             "feed" : {
@@ -154,7 +154,7 @@
                         }
                     }
                 },
-                "nofoward" : {
+                "noforward" : {
                     "ForwardingRules" : {
                     }
                 }
