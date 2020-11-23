@@ -2,7 +2,7 @@
 
 [@addModule
     name="consolidatelogs"
-    description="Solution-wide consolidation of logs, intended for consumption by ElasticSearch."
+    description="Solution-wide consolidation of logs into ops data bucket"
     provider=AWS_PROVIDER
     properties=[
         {
