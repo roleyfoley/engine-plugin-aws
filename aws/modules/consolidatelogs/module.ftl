@@ -2,7 +2,7 @@
 
 [@addModule
     name="consolidatelogs"
-    description="Solution-wide consolidation of logs, intended for consumption by ElasticSearch."
+    description="Solution-wide consolidation of logs into ops data bucket"
     provider=AWS_PROVIDER
     properties=[
         {
@@ -110,17 +110,20 @@
                                 "Functions": {
                                     "processor": {
                                         "RunTime": "python3.6",
-                                        "MemorySize": 128,
-                                        "Timeout": 30,
+                                        "MemorySize": 256,
+                                        "Timeout": 300,
                                         "Handler": "src/run.lambda_handler",
+                                        "PredefineLogGroup" : true,
+                                        "Profiles" : {
+                                            "Logging" : "noforward"
+                                        },
                                         "Links": {
                                             "feed" : {
                                                 "Tier" : tier,
                                                 "Component" : datafeedName,
                                                 "Instance" : "",
                                                 "Version" : "",
-                                                "Role" : "logwatch",
-                                                "Direction": "inbound"
+                                                "Role" : "produce"
                                             }
                                         }
                                     }
@@ -149,6 +152,10 @@
                                 }
                             }
                         }
+                    }
+                },
+                "noforward" : {
+                    "ForwardingRules" : {
                     }
                 }
             },
@@ -183,8 +190,8 @@
                             },
                             "lb" : {
                                 "Logs" : true,
-                                "WAF" : { 
-                                    "Logging" : { 
+                                "WAF" : {
+                                    "Logging" : {
                                          "Enabled" : true
                                      }
                                  }
@@ -203,5 +210,5 @@
     [#-- TODO(rossmurr4y): feature: add test case to the provider: mocked apigw exists and logs to a firehose --]
     [#-- TODO(rossmurr4y): feature: add test case to the provider: mocked LB exists and has loadbalancerattributes enabling logs --]
     [#-- TODO(rossmurr4y): feature: add test profile to module --]
-    
+
 [/#macro]
