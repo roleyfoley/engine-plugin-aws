@@ -45,7 +45,6 @@
     lambdaSourceHash
     tier]
 
-    [@debug message="Entering Module: consolidate-logs" context=layerActiveData enabled=false /]
 
     [#local lambdaName = formatName(namePrefix + "cwlogslambda")]
     [#local datafeedName = formatName(namePrefix + "cwlogsdatafeed")]
@@ -69,11 +68,6 @@
                                         "DataBucket": "opsdata",
                                         "Instance": "",
                                         "Version": ""
-                                    }
-                                },
-                                "LogWatchers": {
-                                    "app-all": {
-                                        "LogFilter": "all-logs"
                                     }
                                 },
                                 "Profiles" : {
