@@ -33,6 +33,7 @@
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "AppData", "Encryption"] )]
     [#local baselineComponentIds = getBaselineComponentIds(baselineLinks)]
+    [#local cmkKeyId            = baselineComponentIds["Encryption"]]
 
     [#local dataBucketId        = baselineComponentIds["AppData"]]
     [#local dataBucket          = getExistingReference(dataBucketId) ]
@@ -44,9 +45,8 @@
                 dataBucketLink.Configuration.Solution.Encryption.EncryptionSource == "EncryptionService" ]
 
     [#local backUpBaselineLinks = getBaselineLinks( dataBucketLink, ["Encryption"]) ]
-    [#local backupCmkKeyId = getBaselineComponentIds(backUpBaselineLinks)["Encryption"]]
+    [#local backUpCmkKeyId = getBaselineComponentIds(backUpBaselineLinks)["Encryption"]]
 
-    [#local cmkKeyId            = baselineComponentIds["Encryption"]]
 
     [#if solution.LogWatchers?has_content ]
         [#local streamSubscriptionRoleId = resources["subscriptionRole"].Id!"" ]
@@ -242,8 +242,8 @@
                                                 solution.Buffering.Interval,
                                                 solution.Buffering.Size,
                                                 streamRoleId,
-                                                encrypted,
-                                                backupCmkKeyId,
+                                                backUpEncrypt,
+                                                backUpCmkKeyId,
                                                 streamBackupLoggingConfiguration )]
 
         [#-- Establish bucket prefixes --]
@@ -271,7 +271,7 @@
                                                 solution.Buffering.Interval,
                                                 solution.Buffering.Size,
                                                 streamRoleId,
-                                                backUpEncrypt,
+                                                s3Encrypt,
                                                 s3BaselineComponentIds["Encryption"],
                                                 streamLoggingConfiguration,
                                                 solution.Backup.Enabled,

@@ -83,6 +83,9 @@
                                     "Prefix" : "CWLogs/Logs/",
                                     "ErrorPrefix" : "CWLogs/Errors/"
                                 },
+                                "Backup" : {
+                                    "Enabled" : false
+                                },
                                 "Links": {
                                     "processor" : {
                                         "Tier" : tier,
