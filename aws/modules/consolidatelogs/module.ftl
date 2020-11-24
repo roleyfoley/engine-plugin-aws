@@ -62,7 +62,6 @@
                                         "DeploymentUnits": [ datafeedName ]
                                     }
                                 },
-                                "Encrypted": true,
                                 "Destination": {
                                     "Link": {
                                         "Tier": "mgmt",
@@ -76,6 +75,9 @@
                                     "app-all": {
                                         "LogFilter": "all-logs"
                                     }
+                                },
+                                "Profiles" : {
+                                    "Logging" : "noforward"
                                 },
                                 "Bucket" : {
                                     "Prefix" : "CWLogs/Logs/",
