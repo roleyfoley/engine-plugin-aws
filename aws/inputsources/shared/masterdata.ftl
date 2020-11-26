@@ -1010,6 +1010,7 @@
               "opsdata": {
                 "Role": "operations",
                 "Encryption" : {
+                  "Enabled" : false,
                   "EncryptionSource" : "LocalService"
                 },
                 "Lifecycles": {
