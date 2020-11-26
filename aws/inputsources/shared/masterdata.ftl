@@ -1009,6 +1009,9 @@
             "DataBuckets": {
               "opsdata": {
                 "Role": "operations",
+                "Encryption" : {
+                  "EncryptionSource" : "LocalService"
+                },
                 "Lifecycles": {
                   "awslogs": {
                     "Prefix": "AWSLogs",
