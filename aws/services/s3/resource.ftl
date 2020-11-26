@@ -237,8 +237,9 @@
     destinationBucket
     enabled
     prefix
-    encryptReplica,
+    encryptReplica
     replicaKMSKeyId=""
+    replicationDestinationAccountId=""
 ]
 
     [#local destinationEncryptionConfiguration = {}]
@@ -246,6 +247,12 @@
         [#local destinationEncryptionConfiguration = {
             "ReplicaKmsKeyID" : getArn(replicaKMSKeyId)
         }]
+    [/#if]
+
+    [#local crossAccountReplication = false ]
+    [#if replicationDestinationAccountId?has_content
+            && replicationDestinationAccountId != accountObject.AWSId ]
+        [#local crossAccountReplication = true ]
     [/#if]
 
     [#return
@@ -256,14 +263,26 @@
             attributeIfContent(
                 "EncryptionConfiguration",
                 destinationEncryptionConfiguration
+            ) +
+            attributeIfTrue(
+                "AccessControlTranslation",
+                crossAccountReplication,
+                {
+                    "Owner" : "Destination"
+                }
+            ) +
+            attributeIfTrue(
+                "Account",
+                crossAccountReplication,
+                replicationDestinationAccountId
             ),
             "Prefix" : prefix,
             "Status" : enabled?then(
                 "Enabled",
                 "Disabled"
             )
-        }
-        + encryptReplica?then(
+        } +
+        encryptReplica?then(
             {
                 "SourceSelectionCriteria" : {
                     "SseKmsEncryptedObjects" : {

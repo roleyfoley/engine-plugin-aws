@@ -73,10 +73,15 @@
             [#local bucketName = subResources["bucket"].Name ]
             [#local bucketPolicyId = subResources["bucketpolicy"].Id ]
             [#local legacyS3 = subResources["bucket"].LegacyS3 ]
-            [#local replicationRoleId = subResources["role"].Id]
             [#local links = getLinkTargets(subOccurrence)]
             [#local versioningEnabled = (subSolution.Replication!{})?has_content?then(true, subSolution.Versioning)]
-            [#local replicateEncryptedData = subSolution.Encryption.Enabled]
+
+            [#local replicationRoleId = subResources["role"].Id]
+            [#local replicateEncryptedData = subSolution.Encryption.Enabled
+                                                && subSolution.Encryption.EncryptionSource == "EncryptionService"]
+            [#local replicationCrossAccount = false ]
+            [#local replicationDestinationAccountId = "" ]
+            [#local replicationExternalPolicy = []]
 
             [#if ( deploymentSubsetRequired(BASELINE_COMPONENT_TYPE, true) && legacyS3 == false ) ||
                 ( deploymentSubsetRequired("s3") && legacyS3 == true) ]
@@ -201,6 +206,13 @@
                                 [/#if]
                                 [#break]
 
+
+                            [#case EXTERNALSERVICE_COMPONENT_TYPE ]
+                                [#if linkTarget.Role  == "replicadestination" ]
+                                    [#local replicationDestinationAccountId = linkTargetAttributes["ACCOUNT_ID"]!"" ]
+                                    [#local replicationExternalPolicy +=   s3ReplicaDestinationPermission( linkTargetAttributes["ARN"] ) ]
+                                [/#if]
+
                             [#case BASELINE_DATA_COMPONENT_TYPE]
                             [#case S3_COMPONENT_TYPE]
 
@@ -209,14 +221,6 @@
                                         [#local replicationEnabled = true]
                                         [#if !replicationBucket?has_content ]
                                             [#local replicationBucket = linkTargetAttributes["ARN"]]
-                                            [#local linkPolicies = 
-                                                getLinkTargetsOutboundRoles(links) + 
-                                                s3EncryptionReadPermission(
-                                                    cmkId,
-                                                    bucketName,
-                                                    "*",
-                                                    getExistingReference(bucketId, REGION_ATTRIBUTE_TYPE)
-                                                )]
                                         [#else]
                                             [@fatal
                                                 message="Only one replication destination is supported"
@@ -243,33 +247,52 @@
                                     subSolution.Replication.Enabled,
                                     prefix,
                                     replicateEncryptedData,
-                                    cmkId
+                                    cmkId,
+                                    replicationDestinationAccountId
                                 )]]
                         [/#list]
 
-                        [#local replicationConfiguration = 
+                        [#local replicationConfiguration =
                             getS3ReplicationConfiguration(replicationRoleId, replicationRules)]
 
-                        [#local rolePolicies =
+                        [#local replicationLinkPolicies =
+                            getLinkTargetsOutboundRoles(links) +
+                            replicateEncryptedData?then(
+                                s3EncryptionReadPermission(
+                                    cmkId,
+                                    bucketName,
+                                    "*",
+                                    getExistingReference(bucketId, REGION_ATTRIBUTE_TYPE)
+                                ),
+                                []
+                                )]
+
+                        [#local replicationRolePolicies =
                                 arrayIfContent(
-                                    [getPolicyDocument(linkPolicies, "links")],
-                                    linkPolicies) +
+                                    [getPolicyDocument(replicationLinkPolicies, "links")],
+                                    replicationLinkPolicies) +
                                 arrayIfContent(
                                     getPolicyDocument(
                                         s3ReplicaSourcePermission(bucketId) +
                                         s3ReplicationConfigurationPermission(bucketId),
                                         "replication"),
                                     replicationConfiguration
+                                ) +
+                                arrayIfContent(
+                                    getPolicyDocument(
+                                        replicationExternalPolicy,
+                                        "externalreplication"
+                                    ),
+                                    replicationExternalPolicy
                                 )]
 
-                        [#if rolePolicies?has_content ]
+                        [#if replicationRolePolicies?has_content ]
                             [@createRole
                                 id=replicationRoleId
                                 trustedServices=["s3.amazonaws.com"]
-                                policies=rolePolicies
+                                policies=replicationRolePolicies
                             /]
                         [/#if]
-           
 
                     [/#if]
                 [/#if]
