@@ -199,7 +199,7 @@
                                 "Logging" : {
                                     "FlowLogs" : {
                                         "all" : {
-                                            "TrafficType" : "all",
+                                            "Action" : "any",
                                             "DestinationType" : "s3",
                                             "s3" : {
                                                 "Link" : {
