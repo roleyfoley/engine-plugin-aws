@@ -75,7 +75,12 @@
                                 },
                                 "Bucket" : {
                                     "Prefix" : "CWLogs/Logs/",
-                                    "ErrorPrefix" : "CWLogs/Errors/"
+                                    "ErrorPrefix" : "CWLogs/Errors/",
+                                    "Include" : {
+                                        "Order" : [ "AccountId", "ComponentPath" ],
+                                        "AccountId" : true,
+                                        "ComponentPath" : true
+                                    }
                                 },
                                 "Backup" : {
                                     "Enabled" : false
