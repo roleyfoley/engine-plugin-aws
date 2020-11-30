@@ -89,6 +89,36 @@
         [/#list]
     [/#list]
 
+    [#local flowLogs = {} ]
+    [#list solution.Logging.FlowLogs as id,flowlog ]
+        [#local flowLogId = formatResourceId(formatResourceId(AWS_VPC_FLOWLOG_RESOURCE_TYPE, core.Id, id ))]
+        [#local flowLogs += {
+            id : {
+                "flowLog" : {
+                    "Id": flowLogId,
+                    "Type" : AWS_VPC_FLOWLOG_RESOURCE_TYPE,
+                    "Name" : formatName(core.FullName, id)
+                }
+            } +
+            ( flowlog.DestinationType == "log" )?then(
+                {
+                    "flowLogRole" : {
+                        "Id" : formatDependentRoleId(flowLogId),
+                        "Type" : AWS_IAM_ROLE_RESOURCE_TYPE,
+                        "IncludeInDeploymentState" : false
+                    },
+                    "flowLogLg" : {
+                        "Id" : formatDependentLogGroupId(flowLogId, id),
+                        "Name" : formatAbsolutePath(core.FullAbsolutePath, id),
+                        "Type" : AWS_CLOUDWATCH_LOG_GROUP_RESOURCE_TYPE,
+                        "IncludeInDeploymentState" : false
+                    }
+                },
+                {}
+            )
+        }]
+    [/#list]
+
     [#assign componentState =
         {
             "Resources" : {
@@ -101,26 +131,6 @@
                 },
                 "subnets" : subnets
             } +
-            vpcFlowLogEnabled?then(
-                { "flowlogs" : {
-                    "flowLogRole" : {
-                        "Id" : formatDependentRoleId(vpcId),
-                        "Type" : AWS_IAM_ROLE_RESOURCE_TYPE,
-                        "IncludeInDeploymentState" : false
-                    },
-                    "flowLogLg" : {
-                        "Id" : formatDependentLogGroupId(vpcId, "all"),
-                        "Name" : flowLogLgName,
-                        "Type" : AWS_CLOUDWATCH_LOG_GROUP_RESOURCE_TYPE,
-                        "IncludeInDeploymentState" : false
-                    },
-                    "flowLog" : {
-                        "Id" : flowLogId,
-                        "Type" : AWS_VPC_FLOWLOG_RESOURCE_TYPE
-                    }
-                }},
-                {}
-            ) +
             legacyVpc?then(
                 {
                     "legacyIGW" : {
@@ -135,6 +145,10 @@
                     }
                 },
                 {}
+            ) +
+            attributeIfContent(
+                "flowLogs",
+                flowLogs
             ),
             "Attributes" : {
             },

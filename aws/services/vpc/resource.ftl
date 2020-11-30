@@ -317,32 +317,70 @@
 [#macro createFlowLog
             id
             roleId
-            logGroupName
+            logDestinationType
             resourceId
             resourceType
-            trafficType]
+            trafficType
+            logGroupName=""
+            s3BucketId=""
+            s3BucketPrefix=""
+            tags=[] ]
+
+    [#switch logDestinationType?lower_case ]
+        [#case "cloudwatch" ]
+        [#case "cloud-watch-logs" ]
+        [#case "log"]
+            [#local logDestinationType = "cloud-watch-logs" ]
+            [#break]
+
+        [#case "s3"]
+            [#local logDestinationType = "s3"]
+            [#break]
+
+        [#default ]
+            [@fatal
+                message="Unkown FlowLog Log DestinationType"
+                context={
+                    "id" : id,
+                    "Resource" : "AWS::EC2::FlowLog",
+                    "logDestinationType" : logDestinationType
+                }
+            /]
+    [/#switch]
+
     [@cfResource
         id=id
+        tags=tags
         type="AWS::EC2::FlowLog"
         properties=
             {
-                "DeliverLogsPermissionArn" : getReference(roleId, ARN_ATTRIBUTE_TYPE),
-                "LogGroupName" : logGroupName,
                 "ResourceId" : getReference(resourceId),
                 "ResourceType" : resourceType,
-                "TrafficType" : trafficType
-            }
+                "TrafficType" : trafficType?upper_case,
+                "LogDestinationType" : logDestinationType
+            } +
+            ( logDestinationType == "cloud-watch-logs" )?then(
+                {
+                    "DeliverLogsPermissionArn" : getReference(roleId, ARN_ATTRIBUTE_TYPE),
+                    "LogGroupName" : logGroupName
+                },
+                {}
+            ) +
+            ( logDestinationType == "s3" )?then(
+                {
+                    "LogDestination" : {
+                        "Fn::Join" : [
+                            "/",
+                            [
+                                getArn(s3BucketId),
+                                s3BucketPrefix
+                            ]
+                        ]
+                    }
+                },
+                {}
+            )
     /]
-[/#macro]
-
-[#macro createVPCFlowLog id vpcId roleId logGroupName trafficType]
-    [@createFlowLog
-        id,
-        roleId,
-        logGroupName,
-        vpcId,
-        "VPC",
-        trafficType /]
 [/#macro]
 
 [#assign VPC_OUTPUT_MAPPINGS =

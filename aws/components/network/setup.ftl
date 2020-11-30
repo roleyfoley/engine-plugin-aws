@@ -20,49 +20,92 @@
 
     [#local loggingProfile = getLoggingProfile(solution.Profiles.Logging)]
 
-    [#if (resources["flowlogs"]!{})?has_content ]
-        [#local flowLogsResources = resources["flowlogs"]]
-        [#local flowLogsRoleId = flowLogsResources["flowLogRole"].Id ]
-        [#local flowLogsAllId = flowLogsResources["flowLog"].Id ]
-        [#local flowLogsAllLogGroupId = flowLogsResources["flowLogLg"].Id ]
-        [#local flowLogsAllLogGroupName = flowLogsResources["flowLogLg"].Name ]
+    [#list resources["flowLogs"]!{} as  id, flowLogResource ]
+        [#local flowLogId = flowLogResource["flowLog"].Id ]
+        [#local flowLogName = flowLogResource["flowLog"].Name ]
 
-        [#if deploymentSubsetRequired("iam", true) &&
-                isPartOfCurrentDeploymentUnit(flowLogsRoleId)]
-            [@createRole
-                id=flowLogsRoleId
-                trustedServices=["vpc-flow-logs.amazonaws.com"]
-                policies=
-                    [
-                        getPolicyDocument(
-                            cwLogsProducePermission(),
-                            formatName(AWS_VPC_FLOWLOG_RESOURCE_TYPE))
-                    ]
+        [#local flowLogRoleId = (flowLogResource["flowLogRole"].Id)!"" ]
+        [#local flowLogLogGroupId = (flowLogResource["flowLogLg"].Id)!"" ]
+        [#local flowLogLogGroupName = (flowLogResource["flowLogLg"].Name)!"" ]
+
+        [#local flowLogSolution = solution.Logging.FlowLogs[id] ]
+        [#local flowLogDestinationType = flowLogSolution.DestinationType ]
+
+        [#local flowLogS3DestinationArn = "" ]
+        [#local flowLogS3DestinationPrefix =
+                    formatRelativePath(
+                        flowLogSolution.s3.Prefix,
+                        core.FullAbsolutePath,
+                        id
+                    )]
+
+        [#if flowLogDestinationType == "log" ]
+            [#if deploymentSubsetRequired("iam", true) &&
+                    isPartOfCurrentDeploymentUnit(flowLogRoleId)]
+                [@createRole
+                    id=flowLogRoleId
+                    trustedServices=["vpc-flow-logs.amazonaws.com"]
+                    policies=
+                        [
+                            getPolicyDocument(
+                                cwLogsProducePermission(flowLogLogGroupName),
+                                "flow-logs-cloudwatch")
+                        ]
+                /]
+            [/#if]
+
+            [@setupLogGroup
+                occurrence=occurrence
+                logGroupId=flowLogLogGroupId
+                logGroupName=flowLogLogGroupName
+                loggingProfile=loggingProfile
+                retention=((segmentObject.Operations.FlowLogs.Expiration) !
+                                (segmentObject.Operations.Expiration) !
+                                (environmentObject.Operations.FlowLogs.Expiration) !
+                                (environmentObject.Operations.Expiration) ! 7)
             /]
         [/#if]
 
-        [@setupLogGroup
-            occurrence=occurrence
-            logGroupId=flowLogsAllLogGroupId
-            logGroupName=flowLogsAllLogGroupName
-            loggingProfile=loggingProfile
-            retention=((segmentObject.Operations.FlowLogs.Expiration) !
-                            (segmentObject.Operations.Expiration) !
-                            (environmentObject.Operations.FlowLogs.Expiration) !
-                            (environmentObject.Operations.Expiration) ! 7)
-        /]
+        [#if flowLogDestinationType = "s3" ]
+            [#local destinationLink = getLinkTarget(occurrence, flowLogSolution.s3.Link) ]
+
+            [#if destinationLink?has_content ]
+                [#switch destinationLink.Core.Type ]
+                    [#case S3_COMPONENT_TYPE]
+                    [#case BASELINE_DATA_COMPONENT_TYPE]
+                        [#local flowLogS3DestinationArn = (destinationLink.State.Attributes["ARN"])!"" ]
+                        [#break]
+
+                    [#default]
+                        [@fatal
+                            message="Invalid S3 Flow log destination component type"
+                            context={
+                                "Id" : flowLogsId,
+                                "Link" : flowLogSolution.s3.Link
+                            }
+                        /]
+                [/#switch]
+            [/#if]
+        [/#if]
 
         [#if deploymentSubsetRequired(NETWORK_COMPONENT_TYPE, true)]
-            [@createVPCFlowLog
-                id=flowLogsAllId
-                vpcId=vpcResourceId
-                roleId=flowLogsRoleId
-                logGroupName=flowLogsAllLogGroupName
-                trafficType="ALL"
+            [@createFlowLog
+                id=flowLogId
+                logDestinationType=flowLogSolution.DestinationType
+                resourceId=vpcResourceId
+                resourceType="VPC"
+                roleId=flowLogRoleId
+                logGroupName=flowLogLogGroupName
+                s3BucketId=flowLogS3DestinationArn
+                s3BucketPrefix=flowLogS3DestinationPrefix
+                trafficType=flowLogSolution.TrafficType
+                tags=getOccurrenceCoreTags(
+                        occurrence,
+                        formatName(core.FullName, "flowLog", id)
+                    )
             /]
         [/#if]
-
-    [/#if]
+    [/#list]
 
     [#if deploymentSubsetRequired(NETWORK_COMPONENT_TYPE, true)]
         [@createVPC
