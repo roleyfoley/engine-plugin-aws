@@ -98,7 +98,7 @@
                 logGroupName=flowLogLogGroupName
                 s3BucketId=flowLogS3DestinationArn
                 s3BucketPrefix=flowLogS3DestinationPrefix
-                trafficType=flowLogSolution.TrafficType
+                trafficType=flowLogSolution.Action
                 tags=getOccurrenceCoreTags(
                         occurrence,
                         formatName(core.FullName, "flowLog", id)

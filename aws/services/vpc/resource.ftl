@@ -348,6 +348,21 @@
             /]
     [/#switch]
 
+    [#switch trafficType?lower_case ]
+        [#case "all"]
+        [#case "any"]
+            [#local trafficType = "ALL" ]
+            [#break]
+
+        [#case "reject" ]
+            [#local trafficType = "REJECT"]
+            [#break]
+
+        [#case "allow" ]
+            [#local trafficType = "ALLOW"]
+            [#break]
+    [/#switch]
+
     [@cfResource
         id=id
         tags=tags
