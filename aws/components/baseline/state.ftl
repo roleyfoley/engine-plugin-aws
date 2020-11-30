@@ -130,7 +130,11 @@
                 }
             },
             "Attributes" : {
-                "BUCKET" : getExistingReference(bucketId)
+                "BUCKET" : getExistingReference(bucketId),
+                "NAME" : getExistingReference(bucketId),
+                "ARN" : getExistingReference(bucketId, ARN_ATTRIBUTE_TYPE),
+                "REGION" : getExistingReference(bucketId, REGION_ATTRIBUTE_TYPE),
+                "FQDN" : getExistingReference(bucketId, DNS_ATTRIBUTE_TYPE)
             },
             "Roles" : {
                 "Inbound" : {},
