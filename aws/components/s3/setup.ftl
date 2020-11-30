@@ -23,7 +23,12 @@
     [#local replicationEnabled = false]
     [#local replicationConfiguration = {} ]
     [#local replicationBucket = ""]
-    [#local replicateEncryptedData = solution.Encryption.Enabled]
+    [#local replicateEncryptedData = solution.Encryption.Enabled
+                                        && solution.Encryption.EncryptionSource == "EncryptionService" ]
+    [#local replicationCrossAccount = false ]
+    [#local replicationDestinationAccountId = "" ]
+    [#local replicationExternalPolicy = []]
+
 
     [#-- Baseline component lookup --]
     [#local baselineLinks = getBaselineLinks(occurrence, [ "CDNOriginKey", "Encryption" ])]
@@ -203,6 +208,13 @@
                     [/#if]
                     [#break]
 
+
+                [#case EXTERNALSERVICE_COMPONENT_TYPE ]
+                    [#if linkTarget.Role  == "replicadestination" ]
+                        [#local replicationDestinationAccountId = linkTargetAttributes["ACCOUNT_ID"]!"" ]
+                        [#local replicationExternalPolicy +=   s3ReplicaDestinationPermission( linkTargetAttributes["ARN"] ) ]
+                    [/#if]
+
                 [#case S3_COMPONENT_TYPE ]
                     [#switch linkTarget.Role ]
                         [#case  "replicadestination" ]
@@ -245,7 +257,8 @@
                     solution.Replication.Enabled,
                     prefix,
                     replicateEncryptedData,
-                    kmsKeyId
+                    kmsKeyId,
+                    replicationDestinationAccountId
                 )]]
         [/#list]
 
@@ -257,13 +270,16 @@
 
     [#if deploymentSubsetRequired("iam", true) &&
             isPartOfCurrentDeploymentUnit(roleId)]
-        [#local linkPolicies = 
-            getLinkTargetsOutboundRoles(links) + 
-            s3EncryptionReadPermission(
-                kmsKeyId,
-                s3Name,
-                "*",
-                getExistingReference(s3Id, REGION_ATTRIBUTE_TYPE)
+        [#local linkPolicies =
+            getLinkTargetsOutboundRoles(links) +
+            replicateEncryptedData?then(
+                s3EncryptionReadPermission(
+                    kmsKeyId,
+                    s3Name,
+                    "*",
+                    getExistingReference(s3Id, REGION_ATTRIBUTE_TYPE)
+                ),
+                []
             )]
 
         [#local rolePolicies =
@@ -276,6 +292,13 @@
                         s3ReplicationConfigurationPermission(s3Id),
                         "replication"),
                     replicationConfiguration
+                ) +
+                arrayIfContent(
+                    getPolicyDocument(
+                        replicationExternalPolicy,
+                        "externalreplication"
+                    ),
+                    replicationExternalPolicy
                 )]
 
         [#if rolePolicies?has_content ]

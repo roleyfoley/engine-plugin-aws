@@ -70,6 +70,81 @@
                                     }
                                 }
                             }
+                        },
+                        "s3replicasrc" : {
+                            "s3" : {
+                                "Instances" : {
+                                    "default" : {
+                                        "deployment:Unit" : "aws-s3-replication"
+                                    }
+                                },
+                                "Profiles" : {
+                                    "Testing" : [ "s3replica" ]
+                                },
+                                "Replication" : {
+                                    "Enabled" : true
+                                },
+                                "Links" : {
+                                    "s3replicadst" : {
+                                        "Tier" : "app",
+                                        "Component" : "s3replicadst",
+                                        "Role" : "replicadestination"
+                                    }
+                                }
+                            }
+                        },
+                        "s3replicadst" : {
+                            "s3" : {
+                                "Instances" : {
+                                    "default" : {
+                                        "deployment:Unit" : "aws-s3-replication"
+                                    }
+                                }
+                            }
+                        },
+                        "s3replicasextrc" : {
+                            "s3" : {
+                                "Instances" : {
+                                    "default" : {
+                                        "deployment:Unit" : "aws-s3-replication-external"
+                                    }
+                                },
+                                "Profiles" : {
+                                    "Testing" : [ "s3replicaext" ]
+                                },
+                                "Replication" : {
+                                    "Enabled" : true
+                                },
+                                "Links" : {
+                                    "s3replicaext" : {
+                                        "Tier" : "app",
+                                        "Component" : "s3replicaext",
+                                        "Role" : "replicadestination"
+                                    }
+                                }
+                            }
+                        },
+                        "s3replicaext" : {
+                            "externalservice" : {
+                                "Instances" : {
+                                    "default" : {
+                                        "deployment:Unit" : "aws-s3-replication-external"
+                                    }
+                                },
+                                "Profiles" : {
+                                    "Placement" : "external"
+                                },
+                                "Properties" : {
+                                    "bucketArn" : {
+                                        "Key" : "ARN",
+                                        "Value" : "arn:aws:s3:::external-replication-destination"
+                                    },
+                                    "bucketAccount" : {
+                                        "Key" : "ACCOUNT_ID",
+                                        "Value" : "0987654321"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -83,6 +158,16 @@
                 "s3notify" : {
                     "s3" : {
                         "TestCases" : [ "s3notify" ]
+                    }
+                },
+                "s3replica" : {
+                    "s3" : {
+                        "TestCases" : [ "s3replica" ]
+                    }
+                },
+                "s3replicaext" : {
+                    "s3" : {
+                        "TestCases" : [ "s3replicaext" ]
                     }
                 }
             },
@@ -140,6 +225,76 @@
                                 "S3NotificationsCreateEvent" : {
                                     "Path"  : "Resources.s3XappXs3notify.Properties.NotificationConfiguration.QueueConfigurations[0].Queue",
                                     "Value" : "arn:aws:iam::123456789012:mock/sqsXappXs3notifyqueueXarn"
+                                }
+                            }
+                        }
+                    }
+                },
+                "s3replica" : {
+                    "OutputSuffix" : "template.json",
+                    "Structural" : {
+                        "CFN" : {
+                            "Resource" : {
+                                "s3BucketSource" : {
+                                    "Name" : "s3XappXs3replicasrc",
+                                    "Type" : "AWS::S3::Bucket"
+                                },
+                                "s3BucketDestination" : {
+                                    "Name" : "s3XappXs3replicadst",
+                                    "Type" : "AWS::S3::Bucket"
+                                }
+                            },
+                            "Output" : [
+                                "s3XappXs3replicasrc",
+                                "s3XappXs3replicasrcXname",
+                                "s3XappXs3replicasrcXarn",
+                                "s3XappXs3replicasrcXregion",
+                                "s3XappXs3replicadst",
+                                "s3XappXs3replicadstXname",
+                                "s3XappXs3replicadstXarn",
+                                "s3XappXs3replicadstXregion"
+                            ]
+                        },
+                        "JSON" : {
+                            "Match" : {
+                                "S3NotificationsCreateEvent" : {
+                                    "Path"  : "Resources.s3XappXs3replicasrc.Properties.ReplicationConfiguration.Rules[0].Destination.Bucket",
+                                    "Value" : "arn:aws:iam::123456789012:mock/s3XappXs3replicadstXarn"
+                                }
+                            }
+                        }
+                    }
+                },
+                "s3replicaext" : {
+                    "OutputSuffix" : "template.json",
+                    "Structural" : {
+                        "CFN" : {
+                            "Resource" : {
+                                "s3BucketSource" : {
+                                    "Name" : "s3XappXs3replicasextrc",
+                                    "Type" : "AWS::S3::Bucket"
+                                }
+                            },
+                            "Output" : [
+                                "s3XappXs3replicasextrc",
+                                "s3XappXs3replicasextrcXname",
+                                "s3XappXs3replicasextrcXarn",
+                                "s3XappXs3replicasextrcXregion"
+                            ]
+                        },
+                        "JSON" : {
+                            "Match" : {
+                                "ReplicationRuleDestination" : {
+                                    "Path"  : "Resources.s3XappXs3replicasextrc.Properties.ReplicationConfiguration.Rules[0].Destination.Bucket",
+                                    "Value" : "arn:aws:s3:::external-replication-destination"
+                                },
+                                "ReplicationRuleDestinationTranslation" : {
+                                    "Path"  : "Resources.s3XappXs3replicasextrc.Properties.ReplicationConfiguration.Rules[0].Destination.AccessControlTranslation.Owner",
+                                    "Value" : "Destination"
+                                },
+                                "ReplicationRuleDestinationOwner" : {
+                                    "Path"  : "Resources.s3XappXs3replicasextrc.Properties.ReplicationConfiguration.Rules[0].Destination.Account",
+                                    "Value" : "0987654321"
                                 }
                             }
                         }

@@ -5,10 +5,9 @@
         [
             getPolicyStatement(
                 actions,
-                "arn:aws:s3:::" +
-                    (getExistingReference(bucket)?has_content)?then(getExistingReference(bucket),bucket) +
+                    ((getExistingReference(bucket)?has_content)?then(getExistingReference(bucket),bucket) +
                     key?has_content?then("/" + key, "") +
-                    object?has_content?then("/" + object, ""),
+                    object?has_content?then("/" + object, ""))?ensure_starts_with("arn:aws:s3:::"),
                 principals,
                 conditions)
         ]
@@ -30,8 +29,7 @@
         [
             getPolicyStatement(
                 actions,
-                "arn:aws:s3:::" +
-                    (getExistingReference(bucket)?has_content)?then(getExistingReference(bucket),bucket),
+                    ((getExistingReference(bucket)?has_content)?then(getExistingReference(bucket),bucket))?ensure_starts_with("arn:aws:s3:::"),
                 principals,
                 conditions +
                     s3PrefixCondition
@@ -205,12 +203,9 @@
 
 [#function s3ReplicaSourcePermission bucket prefix="" object="*"]
     [#return
-
         getS3Statement(
             [
-                "s3:GetObjectVersion",
                 "s3:GetObjectVersionAcl",
-                "s3:GetObjectVersionTagging",
                 "s3:GetObjectVersionForReplication"
             ],
             bucket,
@@ -238,7 +233,9 @@
             [
                 "s3:ReplicateObject",
                 "s3:ReplicateDelete",
-                "s3:ReplicateTags"
+                "s3:ObjectOwnerOverrideToBucketOwner",
+                "s3:ReplicateTags",
+                "s3:GetObjectVersionTagging"
             ],
             bucket,
             prefix,
@@ -258,7 +255,7 @@
             bucket,
             prefix,
             object
-        ) + 
+        ) +
         getS3BucketStatement(
             [
                 "s3:ListBucket",
@@ -267,5 +264,5 @@
             ],
             bucket
         )
-    ]   
+    ]
 [/#function]
