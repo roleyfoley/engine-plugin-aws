@@ -194,6 +194,26 @@
                                          "Enabled" : true
                                      }
                                  }
+                            },
+                            "network" : {
+                                "Logging" : {
+                                    "FlowLogs" : {
+                                        "all" : {
+                                            "TrafficType" : "all",
+                                            "DestinationType" : "s3",
+                                            "s3" : {
+                                                "Link" : {
+                                                    "Tier" : "mgmt",
+                                                    "Component" : "baseline",
+                                                    "DataBucket" : "opsdata",
+                                                    "Instance" : "",
+                                                    "Version" : ""
+                                                },
+                                                "Prefix" : "VPCFlowLogs/"
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
