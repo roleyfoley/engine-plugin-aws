@@ -726,11 +726,11 @@
             [#if wafLogStreamingResources?has_content ]
 
                 [@setupLoggingFirehoseStream
+                    occurrence=occurrence
                     componentSubset=LB_COMPONENT_TYPE
                     resourceDetails=wafLogStreamingResources
                     destinationLink=baselineLinks["OpsData"]
-                    bucketPrefix=formatRelativePath("WAF", "Logs", occurrence.Core.FullRelativePath)
-                    errorPrefix=formatRelativePath("WAF", "Error", occurrence.Core.FullRelativePath )
+                    bucketPrefix="WAF"
                     cloudwatchEnabled=true
                     cmkKeyId=kmsKeyId
                 /]
