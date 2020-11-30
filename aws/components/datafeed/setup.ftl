@@ -246,16 +246,49 @@
                                                 backUpCmkKeyId,
                                                 streamBackupLoggingConfiguration )]
 
-        [#-- Establish bucket prefixes --]
-        [#local streamS3DestinationPrefix = solution.Bucket.Prefix]
-        [#local streamS3DestinationErrorPrefix = solution.Bucket.ErrorPrefix]
-
+        [#local includeOrder = solution.Bucket.Include.Order ]
         [#switch (destinationLink.Core.Type)!"notfound" ]
             [#case BASELINE_DATA_COMPONENT_TYPE]
-                [#local streamS3DestinationPrefix = formatRelativePath(streamS3DestinationPrefix, core.FullAbsolutePath)]
-                [#local streamS3DestinationErrorPrefix = formatRelativePath(streamS3DestinationErrorPrefix, core.FullAbsolutePath)]
+                [#if !(includeOrder?seq_contains("ComponentPath")) || !(solution.Bucket.Include.ComponentPath) ]
+                    [@fatal
+                        message="datafeed destination for baseline data must include ComponentPath in prefix"
+                        context={
+                            "Id": core.Id,
+                            "Destination" : solution.Destination.Link,
+                            "Bucket.Include" : solution.Bucket.Include
+                        }
+                    /]
+                [/#if]
+
                 [#-- continue to s3 case --]
             [#case S3_COMPONENT_TYPE ]
+
+                [#-- Establish bucket prefixes --]
+                [#local prefixIncludes = [ ] ]
+                [#list includeOrder as includePrefix ]
+                    [#if includePrefix == "AccountId" && solution.Bucket.Include.AccountId ]
+                        [#local prefixIncludes += [ { "Ref" : "AWS::AccountId" } ]]
+                    [/#if]
+                    [#if includePrefix == "ComponentPath" && solution.Bucket.Include.ComponentPath ]
+                        [#local prefixIncludes += [ occurrence.Core.FullRelativePath?ensure_ends_with("/") ]]
+                    [/#if]
+                [/#list]
+
+                [#local streamS3DestinationPrefix = {
+                    "Fn::Join" : [
+                        "/",
+                        [ solution.Bucket.Prefix ] +
+                        prefixIncludes
+                    ]
+                }]
+
+                [#local streamS3DestinationErrorPrefix = {
+                    "Fn::Join" : [
+                        "/",
+                        [ solution.Bucket.ErrorPrefix ] +
+                        prefixIncludes
+                    ]
+                }]
 
                 [#local s3Encrypt = destinationLink.Configuration.Solution.Encryption.Enabled &&
                                         destinationLink.Configuration.Solution.Encryption.EncryptionSource == "EncryptionService" ]
