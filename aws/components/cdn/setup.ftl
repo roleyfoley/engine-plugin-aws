@@ -486,11 +486,11 @@
                     formatResourceId(AWS_KINESIS_FIREHOSE_STREAM_RESOURCE_TYPE, wafAclId)]
 
                 [@setupLoggingFirehoseStream
+                    occurrence=occurrence
                     componentSubset=CDN_COMPONENT_TYPE
                     resourceDetails=wafLogStreamingResources
                     destinationLink=baselineLinks["OpsData"]
-                    bucketPrefix=formatRelativePath("WAF", "Logs", occurrence.Core.FullRelativePath)
-                    errorPrefix=formatRelativePath("WAF", "Error", occurrence.Core.FullRelativePath )
+                    bucketPrefix="WAF"
                     cloudwatchEnabled=true
                     cmkKeyId=kmsKeyId
                 /]

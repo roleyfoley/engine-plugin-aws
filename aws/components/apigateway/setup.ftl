@@ -279,11 +279,11 @@
             [/#if]
 
             [@setupLoggingFirehoseStream
+                occurrence=occurrence
                 componentSubset="apigateway"
                 resourceDetails=accessLogStreamingResources
                 destinationLink=destinationLink
-                bucketPrefix=formatRelativePath("APIGatewayAccess", "Logs", occurrence.Core.FullRelativePath)
-                errorPrefix=formatRelativePath("APIGatewayAccess", "Error", occurrence.Core.FullRelativePath )
+                bucketPrefix="APIGatewayAccess"
                 cloudwatchEnabled=true
                 cmkKeyId=kmsKeyId
             /]
@@ -603,11 +603,11 @@
         [#if wafLogStreamingResources?has_content ]
 
             [@setupLoggingFirehoseStream
+                occurrence=occurrence
                 componentSubset="apigateway"
                 resourceDetails=wafLogStreamingResources
                 destinationLink=baselineLinks["OpsData"]
-                bucketPrefix=formatRelativePath("WAF", "Logs", occurrence.Core.FullRelativePath)
-                errorPrefix=formatRelativePath("WAF", "Error", occurrence.Core.FullRelativePath )
+                bucketPrefix="WAF"
                 cloudwatchEnabled=true
                 cmkKeyId=kmsKeyId
             /]

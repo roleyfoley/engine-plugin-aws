@@ -114,15 +114,39 @@
 [/#function]
 
 [#macro setupLoggingFirehoseStream
+    occurrence
     resourceDetails
     destinationLink
     bucketPrefix
-    errorPrefix
     componentSubset
     cloudwatchEnabled=true
     processorId=""
     cmkKeyId=""
     dependencies=""]
+
+    [#local logPrefix  = {
+            "Fn::Join" : [
+                "/",
+                [
+                    bucketPrefix,
+                    "Logs",
+                    { "Ref" : "AWS::AccountId" },
+                    occurrence.Core.FullRelativePath?ensure_ends_with("/")
+                ]
+            ]
+        }]
+
+    [#local errorPrefix  = {
+            "Fn::Join" : [
+                "/",
+                [
+                    bucketPrefix,
+                    "Errors",
+                    { "Ref" : "AWS::AccountId" },
+                    occurrence.Core.FullRelativePath?ensure_ends_with("/")
+                ]
+            ]
+        }]
 
     [#if destinationLink?is_hash && destinationLink?has_content]
 
@@ -167,7 +191,7 @@
                             s3EncryptionKinesisPermission(
                                 cmkKeyId,
                                 bucket.Name,
-                                bucketPrefix,
+                                logPrefix,
                                 region
                             ),
                             []
@@ -183,7 +207,7 @@
                 [#local streamDestinationConfiguration +=
                     getFirehoseStreamS3Destination(
                         bucket.Id,
-                        bucketPrefix,
+                        logPrefix,
                         errorPrefix,
                         bufferInterval,
                         bufferSize,
@@ -377,12 +401,18 @@
     attributeIfContent(
         "Prefix",
         bucketPrefix,
-        bucketPrefix?ensure_ends_with("/")
+        bucketPrefix?is_string?then(
+            bucketPrefix?ensure_ends_with("/"),
+            bucketPrefix
+        )
     ) +
     attributeIfContent(
         "ErrorOutputPrefix",
         errorPrefix,
-        errorPrefix?ensure_ends_with("/")
+        errorPrefix?is_string?then(
+            errorPrefix?ensure_ends_with("/"),
+            errorPrefix
+        )
     ) +
     attributeIfTrue(
         "EncryptionConfiguration",
