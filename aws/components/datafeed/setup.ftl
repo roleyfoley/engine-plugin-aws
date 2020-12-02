@@ -274,12 +274,10 @@
                     [/#if]
                 [/#list]
 
-                [#local bucketPrefix = (solution.Bucket.Prefix)?remove_ending("/")]
-
                 [#local streamS3DestinationPrefix = {
                     "Fn::Join" : [
                         "/",
-                        [ bucketPrefix ] +
+                        [  (solution.Bucket.Prefix)?remove_ending("/") ] +
                         prefixIncludes
                     ]
                 }]
@@ -287,7 +285,7 @@
                 [#local streamS3DestinationErrorPrefix = {
                     "Fn::Join" : [
                         "/",
-                        [ bucketPrefix ] +
+                        [ (solution.Bucket.ErrorPrefix)?remove_ending("/") ] +
                         prefixIncludes
                     ]
                 }]
