@@ -241,8 +241,17 @@
                                 "managedTermination" : scalingPolicy.ComputeProvider.ManageTermination
                         }]
                         [#local managedTermination = scalingPolicy.ComputeProvider.ManageTermination ]
-                        [#if managedTermination]
-                            [#local autoScalingConfig += { "ReplaceCluster" : true } ]
+                        [#if managedTermination
+                                && !(autoScalingConfig.ReplaceCluster)
+                                && !(autoScalingConfig.AlwaysReplaceOnUpdate)]
+                            [@fatal
+                                message="Incorrect AutoScaling configuration"
+                                detail="Managed termination Compute provider scaling requires cluster replacement on update | Enable ReplaceCluster and AlwaysReplaceOnUpdate | Disable ManagedTermination in ComputeProider Scaling policy "
+                                context={
+                                    "AutoScaling" : autoScalingConfig
+                                }
+                                enabled=true
+                            /]
                         [/#if]
                     [#else]
                         [@fatal
@@ -628,6 +637,16 @@
     [#if deploymentSubsetRequired("prologue", false)]
         [@addToDefaultBashScriptOutput
             content=[]
+        /]
+    [/#if]
+
+    [#if managedTermination &&
+            getExistingReference(ecsAutoScaleGroupId)?has_content &&
+            deploymentSubsetRequired("prologue", false)]
+        [@addToDefaultBashScriptOutput
+            content=[
+                r'remove_ec2_scaleinprotection "' + regionId + r'" "' + getExistingReference(ecsAutoScaleGroupId) + r'"'
+            ]
         /]
     [/#if]
 
