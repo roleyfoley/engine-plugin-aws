@@ -410,7 +410,7 @@
                         }
                     ]]
                 [#else]
-                    [#local resourceDimensions = getResourceMetricDimensions(monitoredResource, resources) ]
+                    [#local resourceDimensions = dimensions=getMetricDimensions(alert, monitoredResource, resources) ]
                 [/#if]
 
                 [#switch alert.Comparison ]
