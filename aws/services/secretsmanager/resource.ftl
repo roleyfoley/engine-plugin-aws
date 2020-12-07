@@ -14,7 +14,7 @@
     ]
 [/#function]
 
-[#function getComponentSecretResoures occurrence secretId secretName secretDescription="" ]
+[#function getComponentSecretResources occurrence secretId secretName secretDescription="" ]
     [#return {
         "secret" : {
             "Id" : formatResourceId(AWS_SECRETS_MANAGER_SECRET_RESOURCE_TYPE, occurrence.Core.Id, secretId),
