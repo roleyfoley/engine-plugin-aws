@@ -5,7 +5,7 @@
         REFERENCE_ATTRIBUTE_TYPE : {
             "UseRef" : true
         },
-        URL_ATTRIBUTE_TYPE : {
+        DNS_ATTRIBUTE_TYPE : {
             "Value" : {
                 "Fn::Join" : [
                     ";",
