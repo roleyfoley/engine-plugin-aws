@@ -1,6 +1,6 @@
 [#ftl]
 [#macro aws_queuehost_cf_deployment_generationcontract occurrence ]
-    [@addDefaultGenerationContract subsets="template" /]
+    [@addDefaultGenerationContract subsets=[ "template", "epilogue" ] /]
 [/#macro]
 
 [#macro aws_queuehost_cf_deployment occurrence ]
@@ -72,6 +72,8 @@
 
     [#-- Secret Management --]
     [#local secretStoreLink = getLinkTarget(occurrence, solution.RootCredentials.SecretStore) ]
+    [#local passwordSecretKey = "password" ]
+
     [@setupComponentSecret
         occurrence=occurrence
         secretStoreLink=secretStoreLink
@@ -81,7 +83,7 @@
             solution.RootCredentials.Secret + {
                 "Generated" : {
                     "Content" : { "username" : solution.RootCredentials.Username },
-                    "SecretKey" : "password"
+                    "SecretKey" : passwordSecretKey
                 }
             }
         componentType=QUEUEHOST_COMPONENT_TYPE
@@ -183,5 +185,34 @@
             /]
 
         [/#if]
+    [/#if]
+
+    [#-- Create credentials embeded Url --]
+    [#if deploymentSubsetRequired("epilogue", false) ]
+        [@addToDefaultBashScriptOutput
+            content=
+            [
+                r'case ${STACK_OPERATION} in',
+                r'  create|update)',
+                r'    info "Generating Encrypted Url"',
+                r'    secret_arn="$(get_cloudformation_stack_output "' + regionId + r'" ' + r' "${STACK_NAME}" ' + resources["rootCredentials"]["secret"].Id + r' "ref" || return $?)"',
+                r'    amqp_endopoint="$(get_cloudformation_stack_output "' + regionId + r'" ' + r' "${STACK_NAME}" ' + brokerId + r' "dns" || return $?)"',
+                r'    secret_content="$(aws --region "' + regionId + r'" --output text secretsmanager get-secret-value --secret-id "${secret_arn}" --query "SecretString" || return $?)"',
+                r'    username="' + solution.RootCredentials.Username + r'"',
+                r'    password="$( echo "${secret_content}" | jq -r ".' + passwordSecretKey + r'")"',
+                r'    url="${amqp_endopoint/"amqps://"/"amqps://${username}:${password}@"}"',
+                r'    kms_encrypted_url="$(encrypt_kms_string "' + regionId + r'" ' + r' "${url}" ' + r' "' + getExistingReference(cmkKeyId, ARN_ATTRIBUTE_TYPE) + r'" || return $?)"'
+            ] +
+            pseudoStackOutputScript(
+                "KMS Encrypted Url",
+                {
+                    formatId(brokerId, URL_ATTRIBUTE_TYPE) : r'${kms_encrypted_url}'
+                },
+                secretId
+            ) +
+            [
+                "esac"
+            ]
+        /]
     [/#if]
 [/#macro]

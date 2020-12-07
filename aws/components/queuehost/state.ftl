@@ -11,6 +11,13 @@
     [#local segmentSeedId = formatSegmentSeedId() ]
     [#local segmentSeed = getExistingReference(segmentSeedId)]
 
+    [#local rootCredentialResources = getComponentSecretResources(
+                                        occurrence,
+                                        "root",
+                                        "root",
+                                        "Root credentials for broker"
+                                    )]
+
     [#assign componentState =
         {
             "Resources" : {
@@ -27,16 +34,15 @@
                     "Name" : core.FullName,
                     "Type" : AWS_VPC_SECURITY_GROUP_RESOURCE_TYPE
                 },
-                "rootCredentials" : getComponentSecretResoures(
-                    occurrence,
-                    "root",
-                    "root",
-                    "Root credentials for broker"
-                 )
+                "rootCredentials" : rootCredentialResources
             },
             "Attributes" : {
                 "ENGINE" : solution.Engine,
-                "URL" : getExistingReference(id, URL_ATTRIBUTE_TYPE)
+                "URL" : getExistingReference(id, URL_ATTRIBUTE_TYPE)?ensure_starts_with(solution.RootCredentials.EncryptionScheme),
+                "ENDPOINT" : getExistingReference(id, DNS_ATTRIBUTE_TYPE),
+                "USERNAME" : solution.RootCredentials.Username,
+                "PASSWORD" : getExistingReference(rootCredentialResources["secret"].Id, GENERATEDPASSWORD_ATTRIBUTE_TYPE)?ensure_starts_with(solution.RootCredentials.EncryptionScheme),
+                "SECRET" : getExistingReference(rootCredentialResources["secret"].Id )
             },
             "Roles" : {
                 "Inbound" : {
