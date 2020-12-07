@@ -1,0 +1,13 @@
+[#ftl]
+[@addResourceGroupInformation
+    type=QUEUEHOST_COMPONENT_TYPE
+    attributes=[]
+    provider=AWS_PROVIDER
+    resourceGroup=DEFAULT_RESOURCE_GROUP
+    services=
+        [
+            AWS_VIRTUAL_PRIVATE_CLOUD_SERVICE,
+            AWS_AMAZONMQ_SERVICE,
+            AWS_SECRETS_MANAGER_SERVICE
+        ]
+/]
