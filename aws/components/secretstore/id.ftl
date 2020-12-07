@@ -60,7 +60,7 @@
         [#local secretKeyPath = "." ]
         [#if generateSecret ]
             [#local secretKeyPath = (solution.Generated.SecretKey)?ensure_starts_with(".") ]
-        [/#if
+        [/#if]
 
         [#switch secretStoreSolution.Engine ]
             [#case "aws:secretsmanager" ]
