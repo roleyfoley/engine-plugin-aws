@@ -5,8 +5,18 @@
         REFERENCE_ATTRIBUTE_TYPE : {
             "UseRef" : true
         },
-        DNS_ATTRIBUTE_TYPE : {
-            "Attribute" : "AmqpEndpoints"
+        URL_ATTRIBUTE_TYPE : {
+            "Value" : {
+                "Fn::Join" : [
+                    ";",
+                    {
+                        "Fn::GetAtt" : [
+                            "mqBrokerXmgmtXrabbithutch",
+                            "AmqpEndpoints"
+                        ]
+                    }
+                ]
+            }
         },
         ARN_ATTRIBUTE_TYPE : {
             "Attribute" : "Arn"
@@ -24,8 +34,8 @@
 [#function getAmazonMqMaintenanceWindow dayofWeek timeofDay timeZone="UTC" ]
     [#return
         {
-            "DayOfWeek" : String,
-            "TimeOfDay" : String,
+            "DayOfWeek" : dayofWeek,
+            "TimeOfDay" : timeofDay,
             "TimeZone" : timeZone
         }
     ]
@@ -40,16 +50,16 @@
     ]
 [/#function]
 
-[#macro createAmazonMqBroker id
+[#macro createAmazonMqBroker id name
             engineType
             engineVersion
             instanceType
             multiAz
             encrypted
             kmsKeyId
-            subnetIds
+            subnets
             securityGroupId
-            brokerTags
+            tags
             users=[]
             autoMinorVersionUpdate=false
             logging=true
@@ -70,7 +80,11 @@
         id=id
         type="AWS::AmazonMQ::Broker"
         properties={
-            "SubnetIds" : getReferences(subnetIds),
+            "BrokerName" : name,
+            "SubnetIds" : multiAz?then(
+                                subnets,
+                                [ subnets[0] ]
+            ),
             "SecurityGroups" : [ getReference(securityGroupId) ],
             "Users" : asArray(users),
             "Logs" : {
@@ -84,18 +98,19 @@
                                 "SINGLE_INSTANCE"
             ),
             "HostInstanceType" : instanceType,
-            "MaintenanceWindowStartTime" : maintenanceWindow
+            "MaintenanceWindowStartTime" : maintenanceWindow,
+            "PubliclyAccessible" : false
         } +
         attributeIfTrue(
             "EncryptionOptions",
             encrypted,
             {
                 "KmsKeyId" : getReference(kmsKeyId),
-                "UseAwsOwnedKey" : true
+                "UseAwsOwnedKey" : false
             }
         )
         outputs=AMAZONMQ_BROKER_OUTPUT_MAPPINGS
         dependencies=dependencies
-        tags=brokerTags
+        tags=tags
     /]
 [/#macro]
