@@ -58,7 +58,10 @@
 
         [#local generateSecret = (solution.Source == "generated") ]
         [#local secretKeyPath = "." ]
+        [#local secretAttribute = SECRET_ATTRIBUTE_TYPE]
+
         [#if generateSecret ]
+            [#local secretAttribute = GENERATEDPASSWORD_ATTRIBUTE_TYPE ]
             [#local secretKeyPath = (solution.Generated.SecretKey)?ensure_starts_with(".") ]
         [/#if]
 
@@ -97,7 +100,7 @@
                         pseudoStackOutputScript(
                             "KMS Encrypted Secret",
                             {
-                                formatId(secretId, SECRET_ATTRIBUTE_TYPE) : r'${kms_encrypted_secret}'
+                                formatId(secretId, secretAttribute) : r'${kms_encrypted_secret}'
                             },
                             secretId
                         ) +
