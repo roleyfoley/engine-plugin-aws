@@ -88,7 +88,7 @@
                         [
                             r'case ${STACK_OPERATION} in',
                             r'  create|update)',
-                            r'    info "Saving secret to CMDB",
+                            r'    info "Saving secret to CMDB"',
                             r'    secret_arn="$(get_cloudformation_stack_output "' + regionId + r'" ' + r' "${STACK_NAME}" ' + secretId + r' "ref" || return $?)"',
                             r'    secret_content="$(aws --region "' + regionId + r'" --output text secretsmanager get-secret-value --secret-id "${secret_arn}" --query "SecretString" || return $?)"',
                             r'    secret_value="$( echo "${secret_content}" | jq -r "' + secretKeyPath + r'")"',
