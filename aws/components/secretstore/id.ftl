@@ -6,13 +6,7 @@
         {
             "Names": "Engine",
             "Values" : [ "secretsmanager" ],
-            "Default" : "secretsmanager"
-        },
-        {
-            "Names" : "SaveToCMDB",
-            "Description" : "Save secrets to CMDB as KMS encyrpted strings",
-            "type" : BOOLEAN_TYPE,
-            "Default" : true
+            "Default" : "aws:secretsmanager"
         }
     ]
     provider=AWS_PROVIDER
@@ -63,21 +57,52 @@
         )]
 
         [#local generateSecret = (solution.Source == "generated") ]
+        [#local secretKeyPath = "." ]
+        [#if generateSecret ]
+            [#local secretKeyPath = (solution.Generated.SecretKey)?ensure_starts_with(".") ]
+        [/#if
 
         [#switch secretStoreSolution.Engine ]
             [#case "aws:secretsmanager" ]
+                [#local secretId = resources["secret"].Id ]
+                [#local secretName = resources["secret"].Name ]
+                [#local secretDescription = resources["secret"].Description ]
+
                 [#if deploymentSubsetRequired(componentType, true) ]
 
                     [#local secretPolicy = getSecretsManagerPolicyFromComponentConfig(solution)]
                     [@createSecretsManagerSecret
-                        id=resources["secret"].Id
-                        name=resources["secret"].Name
-                        tags=getOccurrenceCoreTags(occurrence, resources["secret"].Name)
+                        id=secretId
+                        name=secretName
+                        tags=getOccurrenceCoreTags(occurrence, secretName)
                         kmsKeyId=kmsKeyId
-                        description=resources["secret"].Description
+                        description=secretDescription
                         generateSecret=generateSecret
                         generateSecretPolicy=secretPolicy
                         secretString=secretString
+                    /]
+                [/#if]
+                [#if deploymentSubsetRequired("epilogue", false) ]
+                    [@addToDefaultBashScriptOutput
+                        content=
+                        [
+                            r'case ${STACK_OPERATION} in',
+                            r'  create|update)',
+                            r'    secret_arn="$(get_cloudformation_stack_output "' + regionId + r'" ' + r' "${STACK_NAME}" ' + secretId + r' "ref" || return $?)"',
+                            r'    secret_content="$(aws --region "' + regionId + r'" --output text secretsmanager get-secret-value --secret-id "${secret_arn}" --query "SecretString" || return $?)"',
+                            r'    secret_value="$( echo "${secret_content}" | jq -r "' + secretKeyPath + r'")"',
+                            r'    kms_encrypted_secret="$(encrypt_kms_string "' + regionId + r'" ' + r' "${secret_value}" ' + r' "' + getExistingReference(kmsKeyId, ARN_ATTRIBUTE_TYPE) + r'" || return $?)"'
+                        ] +
+                        pseudoStackOutputScript(
+                            "KMS Encrypted Secret",
+                            {
+                                formatId(secretId, "key") : r'${kms_encrypted_secret}'
+                            },
+                            secretId
+                        ) +
+                        [
+                            "esac"
+                        ]
                     /]
                 [/#if]
                 [#break]
