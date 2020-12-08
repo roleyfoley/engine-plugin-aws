@@ -76,6 +76,9 @@
 [#assign AWS_ROUTE53_SERVICE = "dns"]
 [@addService provider=AWS_PROVIDER service=AWS_ROUTE53_SERVICE /]
 
+[#assign AWS_SECRETS_MANAGER_SERVICE = "secretsmanager" ]
+[@addService provider=AWS_PROVIDER service=AWS_SECRETS_MANAGER_SERVICE /]
+
 [#assign AWS_SIMPLE_STORAGE_SERVICE = "s3"]
 [@addService provider=AWS_PROVIDER service=AWS_SIMPLE_STORAGE_SERVICE /]
 
