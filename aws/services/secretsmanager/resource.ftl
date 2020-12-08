@@ -47,7 +47,6 @@
         passwordLength
         generateStringKey
         secretTemplate
-
         excludeChars=""
         excludeLowercase=false
         excludeUppercase=false
