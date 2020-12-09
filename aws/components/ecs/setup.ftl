@@ -97,15 +97,9 @@
 
     [#local efsMountPoints = {}]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#local contextLinks = getLinkTargets(occurrence) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "Links" : contextLinks,
@@ -121,9 +115,8 @@
         }
     ]
 
-    [#-- Add in fragment specifics including override of defaults --]
-    [#local fragmentId = formatFragmentId(_context)]
-    [#include fragmentList?ensure_starts_with("/")]
+    [#-- Add in extension specifics including override of defaults --]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local environmentVariables += getFinalEnvironment(occurrence, _context).Environment ]
 
@@ -194,7 +187,7 @@
                     )
                 ] +
                 arrayIfContent(
-                    [getPolicyDocument(_context.Policy, "fragment")],
+                    [getPolicyDocument(_context.Policy, "extension")],
                     _context.Policy) +
                 arrayIfContent(
                     [getPolicyDocument(linkPolicies, "links")],
@@ -1530,16 +1523,6 @@
                 dependencies=dependencies
                 fixedName=solution.FixedName
             /]
-
-        [/#if]
-
-        [#if deploymentSubsetRequired("ecs", true)]
-
-            [#-- Pick any extra macros in the container fragments --]
-            [#list (solution.Containers!{})?values as container]
-                [#local fragmentId = formatFragmentId(container, occurrence)]
-                [#include fragmentList?ensure_starts_with("/")]
-            [/#list]
 
         [/#if]
 

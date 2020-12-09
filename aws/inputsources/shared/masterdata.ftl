@@ -1212,7 +1212,7 @@
                   "v1": {
                     "deployment:Unit" : "cfredirect-v1",
                     "Enabled": false,
-                    "Fragment": "_cfredirect-v1"
+                    "Extensions": [ "_cfredirect-v1" ]
                   }
                 }
               }

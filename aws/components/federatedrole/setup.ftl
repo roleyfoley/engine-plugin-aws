@@ -15,17 +15,6 @@
 
     [#local roleMappingId = resources["rolemapping"].Id ]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-    [#local _parentContext =
-        {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id
-        }
-    ]
-    [#local fragmentId = formatFragmentId(_parentContext)]
-
     [#local federationProviders = {}]
     [#local federationCognitoProviders = [] ]
 
@@ -99,19 +88,16 @@
         [#local roleId = subResources["role"].Id ]
 
         [#local contextLinks = getLinkTargets(subOccurrence)]
-
-        [#assign _context =
+        [#local _context =
             {
-                "Id" : fragment,
-                "Name" : fragment,
-                "Instance" : core.Instance.Id,
-                "Version" : core.Version.Id,
                 "Links" : contextLinks,
                 "Policy" : standardPolicies(subOccurrence, baselineComponentIds),
                 "ManagedPolicy" : [],
                 "Assignment" : subCore.SubComponent.Id
             }
         ]
+        [#-- Add in extension specifics including override of defaults --]
+        [#local _context = invokeExtensions( subOccurrence, _context, occurrence )]
 
         [#switch subSolution.Type ]
             [#case "Authenticated" ]
@@ -174,9 +160,6 @@
 
                 [#break]
         [/#switch]
-
-        [#-- Add in fragment specifics including override of defaults --]
-        [#include fragmentList?ensure_starts_with("/")]
 
         [#local managedPolicies = _context.ManagedPolicy ]
         [#local linkPolicies = getLinkTargetsOutboundRoles(_context.Links) ]

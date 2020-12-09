@@ -88,15 +88,9 @@
                 {}
             )]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#local contextLinks = getLinkTargets(occurrence, links) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "Links" : contextLinks,
@@ -112,9 +106,8 @@
         }
     ]
 
-    [#-- Add in fragment specifics including override of defaults --]
-    [#local fragmentId = formatFragmentId(_context)]
-    [#include fragmentList?ensure_starts_with("/")]
+    [#-- Add in extension specifics including override of defaults --]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local environmentVariables = getFinalEnvironment(occurrence, _context).Environment ]
     [#local linkPolicies = getLinkTargetsOutboundRoles(_context.Links) ]
