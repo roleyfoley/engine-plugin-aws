@@ -646,7 +646,7 @@
 [/#macro]
 
 [#macro aws_ecs_cf_deployment_generationcontract_application occurrence ]
-    [@addDefaultGenerationContract subsets=["prologue", "template", "epilogue", "cli"] /]å
+    [@addDefaultGenerationContract subsets=[ "pregeneration", "prologue", "template", "epilogue", "cli"] /]å
 [/#macro]
 
 [#macro aws_ecs_cf_deployment_application occurrence ]
@@ -1429,6 +1429,28 @@
                         logGroupName=container.LogGroup.Name
                         loggingProfile=loggingProfile
                     /]
+            [/#if]
+        [/#list]
+
+        [#list solution.Containers as id, container ]
+            [#local imageSource = container.Image.Source]
+
+            [#if deploymentSubsetRequired("pregeneration", false)
+                    && imageSource == "containerregistry" ]
+                [@addToDefaultBashScriptOutput
+                    content=
+                        getImageFromContainerRegistryScript(
+                                productName,
+                                environmentName,
+                                segmentName,
+                                subOccurrence,
+                                container.Image["Source:containerregistry"].Image,
+                                "docker",
+                                getRegistryEndPoint("docker", subOccurrence),
+                                "ecr",
+                                regionId
+                        )
+                /]
             [/#if]
         [/#list]
 
