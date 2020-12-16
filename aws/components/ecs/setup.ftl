@@ -509,7 +509,7 @@
                             reportOK=alert.ReportOk
                             unit=alert.Unit
                             missingData=alert.MissingData
-                            dimensions=getResourceMetricDimensions(monitoredResource, resources)
+                            dimensions=getMetricDimensions(alert, monitoredResource, resources, environmentVariables)
                         /]
                     [#break]
                 [/#switch]
@@ -1512,7 +1512,7 @@
                                 reportOK=alert.ReportOk
                                 unit=alert.Unit
                                 missingData=alert.MissingData
-                                dimensions=getResourceMetricDimensions(monitoredResource, ( resources + { "cluster" : parentResources["cluster"] } ) )
+                                dimensions=getMetricDimensions(alert, monitoredResource, ( resources + { "cluster" : parentResources["cluster"] } ) )
                             /]
                         [#break]
                     [/#switch]
