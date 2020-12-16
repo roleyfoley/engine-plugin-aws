@@ -69,10 +69,8 @@
         }
     ]
 
-    [#if solution.Extensions?has_content ]
-        [#-- Add in extension specifics including override of defaults --]
-        [#local _context = invokeExtensions( occurrence, _context )]
-    [/#if]
+    [#-- Add in extension specifics including override of defaults --]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local sshPublicKeys = {}]
     [#list solution.SSHPublicKeys as id,publicKey ]
