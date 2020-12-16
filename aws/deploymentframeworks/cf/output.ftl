@@ -201,21 +201,41 @@
                 value.Export!false
             /]
         [#else]
-            [@cfOutput
-                formatAttributeId(oId, type),
-                ((value.UseRef)!false)?then(
-                    {
-                        "Ref" : id
-                    },
-                    value.Value?has_content?then(
-                        value.Value,
+
+            [#if value.Replace?has_content ]
+                [#local content = getJSON(value.Replace)]
+                [#list [ "_id_" ] as replaceSting ]
+                    [#switch replaceSting ]
+                        [#case "_id_" ]
+                            [#local content = content?replace(replaceSting, id )]
+                            [#break]
+                    [/#switch]
+                [/#list]
+
+                [@cfOutput
+                    formatAttributeId(oId, type),
+                    content?eval,
+                    value.Export!false
+                /]
+            [#else]
+                [@cfOutput
+                    formatAttributeId(oId, type),
+                    ((value.UseRef)!false)?then(
                         {
-                            "Fn::GetAtt" : [id, value.Attribute]
-                        }
-                    )
-                ),
-                value.Export!false
-            /]
+                            "Ref" : id
+                        },
+                        value.Value?has_content?then(
+                            value.Value,
+                            {
+                                "Fn::GetAtt" : [id, value.Attribute]
+                            }
+                        )
+                    ),
+                    value.Export!false
+                /]
+            [/#if]
+
+
         [/#if]
     [/#list]
 [/#macro]
