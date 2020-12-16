@@ -6,12 +6,12 @@
             "UseRef" : true
         },
         DNS_ATTRIBUTE_TYPE : {
-            "Value" : {
+            "Replace" : {
                 "Fn::Join" : [
                     ";",
                     {
                         "Fn::GetAtt" : [
-                            "mqBrokerXmgmtXrabbithutch",
+                            "_id_",
                             "AmqpEndpoints"
                         ]
                     }
