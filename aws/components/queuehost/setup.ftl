@@ -74,20 +74,29 @@
     [#local secretStoreLink = getLinkTarget(occurrence, solution.RootCredentials.SecretStore) ]
     [#local passwordSecretKey = "password" ]
 
-    [@setupComponentSecret
-        occurrence=occurrence
-        secretStoreLink=secretStoreLink
-        kmsKeyId=cmkKeyId
-        secretComponentResources=resources["rootCredentials"]
-        secretComponentConfiguration=
-            solution.RootCredentials.Secret + {
-                "Generated" : {
-                    "Content" : { "username" : solution.RootCredentials.Username },
-                    "SecretKey" : passwordSecretKey
+    [#if secretStoreLink?has_content ]
+
+        [@setupComponentSecret
+            occurrence=occurrence
+            secretStoreLink=secretStoreLink
+            kmsKeyId=cmkKeyId
+            secretComponentResources=resources["rootCredentials"]
+            secretComponentConfiguration=
+                solution.RootCredentials.Secret + {
+                    "Generated" : {
+                        "Content" : { "username" : solution.RootCredentials.Username },
+                        "SecretKey" : passwordSecretKey
+                    }
                 }
-            }
-        componentType=QUEUEHOST_COMPONENT_TYPE
-    /]
+            componentType=QUEUEHOST_COMPONENT_TYPE
+        /]
+    [#else]
+        [@fatal
+            message="Could not find link to secret store or link was invalid"
+            detail="Added a link to a secret store component which will manage the root credentials"
+            context=solution.RootCredentials.SecretStore
+        /]
+    [/#if]
 
     [#-- Output Generation --]
     [#if deploymentSubsetRequired(QUEUEHOST_COMPONENT_TYPE, true)]
