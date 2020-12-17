@@ -24,18 +24,6 @@
     [#local baselineComponentIds = getBaselineComponentIds(baselineLinks)]
     [#local operationsBucket = getExistingReference(baselineComponentIds["OpsData"]!"") ]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
-    [#local _parentContext =
-        {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id
-        }
-    ]
-    [#local fragmentId = formatFragmentId(_parentContext)]
-
     [#local securityProfile = getSecurityProfile(solution.Profiles.Security, CDN_COMPONENT_TYPE)]
 
     [#local certificateObject = getCertificateObject(solution.Certificate, segmentQualifiers) ]
@@ -76,13 +64,8 @@
         [/#if]
 
         [#local contextLinks = getLinkTargets(subOccurrence)]
-
-        [#assign _context =
+        [#local _context =
             {
-                "Id" : fragment,
-                "Name" : fragment,
-                "Instance" : subCore.Instance.Id,
-                "Version" : subCore.Version.Id,
                 "Environment" : {},
                 "Links" : contextLinks,
                 "BaselineLinks" : baselineLinks,
@@ -95,11 +78,11 @@
             }
         ]
 
-        [#-- Add in fragment specifics including override of defaults --]
-        [#include fragmentList?ensure_starts_with("/")]
+        [#-- Add in entrance specifics including override of defaults --]
+        [#local _context = invokeExtensions( subOccurrence, _context, occurrence )]
 
         [#local finalEnvironment = getFinalEnvironment(subOccurrence, _context ) ]
-        [#assign _context += finalEnvironment ]
+        [#local _context += finalEnvironment ]
 
         [#-- Get any event handlers --]
         [#local eventHandlerLinks = {} ]
@@ -124,14 +107,14 @@
             [#if getLinkTarget(occurrence, cfRedirectLink.cfredirect )?has_content ]
                 [#local eventHandlerLinks += cfRedirectLink]
 
-                [#assign _context +=
+                [#local _context +=
                     {
                         "ForwardHeaders" : (_context.ForwardHeaders![]) + [
                             "Host"
                         ]
                     }]
 
-                [#assign _context +=
+                [#local _context +=
                     {
                         "CustomOriginHeaders" : (_context.CustomOriginHeaders![]) + [
                             getCFHTTPHeader(

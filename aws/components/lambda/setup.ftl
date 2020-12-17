@@ -69,8 +69,6 @@
         [#local securityGroupName = resources["securityGroup"].Name ]
     [/#if]
 
-    [#local fragment = getOccurrenceFragmentBase(fn) ]
-
     [#local buildReference = getOccurrenceBuildReference(fn)]
 
     [#local imageSource = solution.Image.Source]
@@ -92,12 +90,8 @@
     [/#if]
 
     [#local contextLinks = getLinkTargets(fn) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(fn, contextLinks, baselineLinks),
             "Environment" : {},
             "S3Bucket" : getRegistryEndPoint("lambda", fn),
@@ -121,6 +115,7 @@
             "CodeHash" : solution.FixedCodeVersion.CodeHash
         }
     ]
+    [#local _context = invokeExtensions( fn, _context )]
 
     [#if deploymentSubsetRequired("lambda", true)]
         [#list _context.Links as linkName,linkTarget]
@@ -211,13 +206,9 @@
         [/#list]
     [/#if]
 
-    [#-- Add in fragment specifics including override of defaults --]
-    [#local fragmentId = formatFragmentId(_context)]
-    [#include fragmentList?ensure_starts_with("/")]
-
     [#-- clear all environment variables for EDGE deployments --]
     [#if deploymentType == "EDGE" ]
-            [#assign _context += {
+        [#local _context += {
             "DefaultEnvironment" : {},
             "Environment" : {},
             "DefaultCoreVariables" : false,
@@ -229,7 +220,7 @@
 
     [#local finalEnvironment = getFinalEnvironment(fn, _context, solution.Environment) ]
     [#local finalAsFileEnvironment = getFinalEnvironment(fn, _context, solution.Environment + {"AsFile" : false}) ]
-    [#assign _context += finalEnvironment ]
+    [#local _context += finalEnvironment ]
 
     [#local roleId = formatDependentRoleId(fnId)]
     [#local managedPolicies =

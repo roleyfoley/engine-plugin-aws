@@ -27,15 +27,9 @@
 
     [#local asFiles = getAsFileSettings(occurrence.Configuration.Settings.Product) ]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#local contextLinks = getLinkTargets(occurrence) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "ContextSettings" : {},
@@ -47,10 +41,7 @@
             "DefaultBaselineVariables" : false
         }
     ]
-
-    [#-- Add in fragment specifics including override of defaults --]
-    [#local fragmentId = formatFragmentId(_context)]
-    [#include fragmentList?ensure_starts_with("/")]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local EnvironmentSettings =
         {

@@ -102,15 +102,9 @@
         [/#if]
     [/#list]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#local contextLinks = getLinkTargets(occurrence, links) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "Links" : contextLinks,
@@ -128,9 +122,7 @@
         }
     ]
 
-    [#-- Add in fragment specifics including override of defaults --]
-    [#local fragmentId = formatFragmentId(_context)]
-    [#include fragmentList?ensure_starts_with("/")]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local environmentVariables += getFinalEnvironment(occurrence, _context ).Environment ]
 
@@ -222,7 +214,7 @@
                         }
                     }]
                 [/#list]
-                [#assign _context +=
+                [#local _context +=
                     {
                         "DataVolumes" :
                             (_context.DataVolumes!{}) +
@@ -311,7 +303,7 @@
                     [getPolicyDocument(linkPolicies, "links")],
                     linkPolicies) +
                 arrayIfContent(
-                    [getPolicyDocument(_context.Policy, "fragment")],
+                    [getPolicyDocument(_context.Policy, "extension")],
                     _context.Policy)
         /]
     [/#if]

@@ -76,17 +76,11 @@
             "_ROLE_RESOURCE_NAME" : resourceRoleName
     }]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#-- Add in container specifics including override of defaults --]
     [#-- Allows for explicit policy or managed ARN's to be assigned to the user --]
     [#local contextLinks = getLinkTargets(occurrence) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "Links" : contextLinks,
@@ -99,12 +93,12 @@
         }
     ]
 
-    [#if solution.Fragment?has_content ]
-        [#local fragmentId = formatFragmentId(_context)]
-        [#include fragmentList?ensure_starts_with("/")]
+    [#if solution.Extensions?has_content ]
+        [#-- Add in extension specifics including override of defaults --]
+        [#local _context = invokeExtensions( occurrence, _context )]
     [/#if]
 
-    [#assign _context += getFinalEnvironment(occurrence, _context ) ]
+    [#local _context += getFinalEnvironment(occurrence, _context ) ]
     [#local parameterValues += _context.Environment ]
 
     [#list _context.Links as linkId,linkTarget]

@@ -37,18 +37,6 @@
     [#local runIdAttributeName = "runId" ]
     [#local runIdAttribute = getDynamoDbTableItem( ":run_id", commandLineOptions.Run.Id)]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
-    [#local _parentContext =
-        {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : parentCore.Instance.Id,
-            "Version" : parentCore.Version.Id
-        }
-    ]
-    [#local fragmentId = formatFragmentId(_parentContext)]
-
     [#-- Lookup table name once it has been deployed --]
     [#if deploymentSubsetRequired("epilogue", false)]
         [@addToDefaultBashScriptOutput
@@ -85,12 +73,8 @@
 
         [#local contextLinks = getLinkTargets(subOccurrence)]
 
-        [#assign _context =
+        [#local _context =
             {
-                "Id" : fragment,
-                "Name" : fragment,
-                "Instance" : parentCore.Instance.Id,
-                "Version" : parentCore.Version.Id,
                 "Environment" : {},
                 "Links" : contextLinks,
                 "BaselineLinks" : baselineLinks,
@@ -103,13 +87,13 @@
             }
         ]
 
-        [#-- Add in fragment specifics including override of defaults --]
-        [#include fragmentList?ensure_starts_with("/")]
+        [#-- Add in extension specifics including override of defaults --]
+        [#local _context = invokeExtensions( subOccurrence, _context, occurrence )]
 
         [#local finalEnvironment = getFinalEnvironment(subOccurrence, _context ) ]
-        [#assign _context += finalEnvironment ]
+        [#local _context += finalEnvironment ]
 
-        [#assign _context +=
+        [#local _context +=
             {
                 "Environment" : {
                                     "configStore" : parentCore.Id

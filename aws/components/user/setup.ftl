@@ -53,17 +53,11 @@
             passwordEncryptionScheme
         )]
 
-    [#local fragment = getOccurrenceFragmentBase(occurrence) ]
-
     [#-- Add in container specifics including override of defaults --]
     [#-- Allows for explicit policy or managed ARN's to be assigned to the user --]
     [#local contextLinks = getLinkTargets(occurrence) ]
-    [#assign _context =
+    [#local _context =
         {
-            "Id" : fragment,
-            "Name" : fragment,
-            "Instance" : core.Instance.Id,
-            "Version" : core.Version.Id,
             "DefaultEnvironment" : defaultEnvironment(occurrence, contextLinks, baselineLinks),
             "Environment" : {},
             "Links" : contextLinks,
@@ -75,10 +69,8 @@
         }
     ]
 
-    [#if solution.Fragment?has_content ]
-        [#local fragmentId = formatFragmentId(_context)]
-        [#include fragmentList?ensure_starts_with("/")]
-    [/#if]
+    [#-- Add in extension specifics including override of defaults --]
+    [#local _context = invokeExtensions( occurrence, _context )]
 
     [#local sshPublicKeys = {}]
     [#list solution.SSHPublicKeys as id,publicKey ]
@@ -167,7 +159,7 @@
                 policies=
                     [] +
                     arrayIfContent(
-                        [getPolicyDocument(_context.Policy, "fragment")],
+                        [getPolicyDocument(_context.Policy, "extension")],
                         _context.Policy) +
                     arrayIfContent(
                         [getPolicyDocument(transferLinkPolicies, "links")],
@@ -237,7 +229,7 @@
                             [#if ! (_context.TransferMounts)?has_content ]
                                 [@fatal
                                     message="No Tranfer Mount Locations found"
-                                    detail="Add at least one transfer mount using the userTransferMount fragment macro"
+                                    detail="Add at least one transfer mount using the userTransferMount extension macro"
                                 /]
                             [/#if]
 
