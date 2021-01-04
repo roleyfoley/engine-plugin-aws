@@ -191,7 +191,17 @@
         dynamodbWritePermission(
             tables,
             principals,
-            conditions)]
+            conditions) +
+        dynamodbQueryPermission(
+            tables,
+            [],
+            principals,
+            conditions) +
+        dynamodbScanPermission(
+            tables,
+            [],
+            principals,
+            conditions) ]
 [/#function]
 
 [#function dynamodbConsumePermission tables="*" principals="" conditions={} ]
@@ -203,7 +213,17 @@
         dynamodbDeletePermission(
             tables,
             principals,
-            conditions)]
+            conditions) +
+        dynamodbQueryPermission(
+            tables,
+            [],
+            principals,
+            conditions) +
+        dynamodbScanPermission(
+            tables,
+            [],
+            principals,
+            conditions) ]
 [/#function]
 
 [#function dynamodbManageTablesPermission tables="*" principals="" conditions={} ]
