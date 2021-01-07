@@ -112,7 +112,8 @@
             "DefaultBaselineVariables" : true,
             "Policy" : standardPolicies(fn, baselineComponentIds),
             "ManagedPolicy" : [],
-            "CodeHash" : solution.FixedCodeVersion.CodeHash
+            "CodeHash" : solution.FixedCodeVersion.CodeHash,
+            "VersionDependencies" : []
         }
     ]
     [#local _context = invokeExtensions( fn, _context )]
