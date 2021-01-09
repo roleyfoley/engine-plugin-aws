@@ -70,8 +70,13 @@
     [/#if]
 
     [#local buildReference = getOccurrenceBuildReference(fn)]
+    [#local buildUnit = getOccurrenceBuildUnit(fn)]
 
     [#local imageSource = solution.Image.Source]
+    [#if imageSource == "url" ]
+        [#local buildUnit = fn.Core.Name ]
+    [/#if]
+
     [#if deploymentSubsetRequired("pregeneration", false) && imageSource == "url" ]
         [@addToDefaultBashScriptOutput
             content=
@@ -100,7 +105,7 @@
                     getRegistryPrefix("lambda", fn),
                     getOccurrenceBuildProduct(fn,productName),
                     getOccurrenceBuildScopeExtension(fn),
-                    getOccurrenceBuildUnit(fn),
+                    buildUnit,
                     buildReference,
                     "lambda.zip"
                 ),
@@ -113,7 +118,8 @@
             "Policy" : standardPolicies(fn, baselineComponentIds),
             "ManagedPolicy" : [],
             "CodeHash" : solution.FixedCodeVersion.CodeHash,
-            "VersionDependencies" : []
+            "VersionDependencies" : [],
+            "CreateVersionInExtension" : false
         }
     ]
     [#local _context = invokeExtensions( fn, _context )]
@@ -304,7 +310,7 @@
             /]
         [/#if]
 
-        [#if deploymentSubsetRequired("lambda", true)]
+        [#if !(_context.CreateVersionInExtension) && deploymentSubsetRequired("lambda", true)]
             [@createLambdaVersion
                 id=versionResourceId
                 targetId=fnId
@@ -389,16 +395,18 @@
                 /]
             [/#if]
 
-            [@createLambdaPermission
-                id=formatLambdaPermissionId(fn, "replication")
-                action="lambda:GetFunction"
-                targetId=versionResourceId
-                source={
-                    "Principal" : "replicator.lambda.amazonaws.com"
-                }
-                sourceId=scheduleRuleId
-                dependencies=scheduleRuleId
-            /]
+            [#if !(_context.CreateVersionInExtension) ]
+                [@createLambdaPermission
+                    id=formatLambdaPermissionId(fn, "replication")
+                    action="lambda:GetFunction"
+                    targetId=versionResourceId
+                    source={
+                        "Principal" : "replicator.lambda.amazonaws.com"
+                    }
+                    sourceId=scheduleRuleId
+                    dependencies=scheduleRuleId
+                /]
+            [/#if]
         [/#if]
 
         [#list solution.Schedules?values as schedule ]
