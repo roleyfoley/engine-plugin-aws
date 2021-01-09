@@ -350,6 +350,34 @@
                                 eventHandlers )]
                 [#local routeBehaviours += behaviour ]
                 [#break]
+
+            [#case EXTERNALSERVICE_COMPONENT_TYPE ]
+
+                [#local originHostName = originLinkTargetAttributes["FQDN"]!"HamletFatal: Could not find FQDN Attribute on external service" ]
+
+                [#local path = originLinkTargetAttributes["PATH"]!"HamletFatal: Could not fid PATH Attribute on external service" ]
+                [#local originPath = formatAbsolutePath( path, subSolution.Origin.BasePath ) ]
+
+                [#local origin =
+                            getCFHTTPOrigin(
+                                originId,
+                                originHostName,
+                                _context.CustomOriginHeaders,
+                                originPath
+                            )]
+                [#local origins += origin ]
+
+                [#local behaviour =
+                            getCFLBCacheBehaviour(
+                                origin,
+                                behaviourPattern,
+                                subSolution.CachingTTL,
+                                subSolution.Compress,
+                                _context.ForwardHeaders,
+                                eventHandlers )]
+                [#local routeBehaviours += behaviour ]
+                [#break]
+
         [/#switch]
 
         [#list routeBehaviours as behaviour ]
