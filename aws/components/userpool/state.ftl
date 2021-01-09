@@ -45,7 +45,7 @@
         [#local userPoolDomainId = formatResourceId(AWS_COGNITO_USERPOOL_DOMAIN_RESOURCE_TYPE, core.Id)]
         [#local certificatePresent = isPresent(solution.HostedUI.Certificate) ]
         [#local userPoolDomainName = formatName("auth", core.ShortFullName, segmentSeed)]
-        [#local userPoolFQDN = formatDomainName(userPoolDomainName, "auth", region, "amazoncognito.com")]
+        [#local userPoolFQDN = formatDomainName(userPoolDomainName, "auth", occurrence.State.ResourceGroups["default"].Placement.Region, "amazoncognito.com")]
         [#local userPoolBaseUrl = "https://" + userPoolFQDN + "/" ]
 
         [#local region = getExistingReference(userPoolId, REGION_ATTRIBUTE_TYPE)!regionId ]
