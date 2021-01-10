@@ -355,7 +355,7 @@
 
                 [#local originHostName = originLinkTargetAttributes["FQDN"]!"HamletFatal: Could not find FQDN Attribute on external service" ]
 
-                [#local path = originLinkTargetAttributes["PATH"]!"HamletFatal: Could not fid PATH Attribute on external service" ]
+                [#local path = originLinkTargetAttributes["PATH"]!"HamletFatal: Could not find PATH Attribute on external service" ]
                 [#local originPath = formatAbsolutePath( path, subSolution.Origin.BasePath ) ]
 
                 [#local origin =
