@@ -25,3 +25,16 @@
                 extensions),
             segmentSeed)]
 [/#function]
+
+[#function formatAccountS3PrimaryBucketName bucketType ]
+    [#assign existingName = getExistingReference(formatAccountS3Id(bucketType), NAME_ATTRIBUTE_TYPE, commandLineOptions.Regions.Segment )]
+    [#return valueIfContent(
+                existingName,
+                existingName,
+                formatName("account", bucketType, accountObject.Seed ))]
+[/#function]
+
+
+[#function formatAccountS3ReplicaBucketName bucketType region ]
+    [#return formatAccountS3PrimaryBucketName(bucketType)?ensure_ends_with("-" + region)]
+[/#function]
