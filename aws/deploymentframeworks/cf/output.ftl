@@ -204,10 +204,10 @@
 
             [#if value.Replace?has_content ]
                 [#local content = getJSON(value.Replace)]
-                [#list [ "_id_" ] as replaceSting ]
-                    [#switch replaceSting ]
+                [#list [ "_id_" ] as replaceString ]
+                    [#switch replaceString ]
                         [#case "_id_" ]
-                            [#local content = content?replace(replaceSting, id )]
+                            [#local content = content?replace(replaceString, id )]
                             [#break]
                     [/#switch]
                 [/#list]
