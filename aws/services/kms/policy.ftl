@@ -72,7 +72,7 @@
         [
             getPolicyStatement(
                 asArray(actions),
-                getReference(keyId, ARN_ATTRIBUTE_TYPE),
+                getArn(keyId, false, bucketRegion),
                 "",
                 {
                     "StringEquals" : {
