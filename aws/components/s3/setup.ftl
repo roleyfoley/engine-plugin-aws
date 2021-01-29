@@ -363,6 +363,70 @@
         [/#if]
     [/#if]
 
+
+    [#local inventoryReports = []]
+    [#list solution.InventoryReports as reportId,inventoryReport ]
+        [#switch inventoryReport.Destination.Type ]
+            [#case "self"]
+                [#local inventoryId = reportId]
+                    [#local inventoryReports += [
+                        getS3InventoryReportConfiguration(
+                            inventoryId,
+                            inventoryReport.InventoryFormat,
+                            formatGlobalArn("s3", s3Name, ""),
+                            inventoryReport.Schedule
+                            inventoryReport.InventoryPrefix,
+                            inventoryReport.DestinationPrefix,
+                            inventoryReport.IncludeVersions
+                        )]]
+                [#break]
+
+            [#case "link"]
+
+                [#list inventoryReport.Destination.Links as linkId,link]
+
+                    [#local inventoryId = formatName(reportId, linkId)]
+
+                    [#if link?is_hash]
+
+                        [#local linkTarget = getLinkTarget(occurrence, link, false) ]
+                        [@debug message="Link Target" context=linkTarget enabled=false /]
+
+                        [#if !linkTarget?has_content]
+                            [#continue]
+                        [/#if]
+
+                        [#local linkTargetCore = linkTarget.Core ]
+                        [#local linkTargetAttributes = linkTarget.State.Attributes ]
+
+                        [#switch linkTargetCore.Type ]
+                            [#case S3_COMPONENT_TYPE ]
+                            [#case BASELINE_DATA_COMPONENT_TYPE ]
+                                [#local inventoryReports += [
+                                        getS3InventoryReportConfiguration(
+                                            inventoryId,
+                                            inventoryReport.InventoryFormat,
+                                            linkTargetAttributes["ARN"],
+                                            inventoryReport.Schedule
+                                            inventoryReport.InventoryPrefix,
+                                            inventoryReport.DestinationPrefix,
+                                            inventoryReport.IncludeVersions
+                                        )]]
+                                [#break]
+
+                            [#default]
+                                [@fatal
+                                    message="Unsupported inventory report destination"
+                                    detail="Supported types ${S3_COMPONENT_TYPE}, ${BASELINE_DATA_COMPONENT_TYPE}"
+                                    context={ "Id" : occurrence.Core.Id, "InventoryReport" : inventoryReport }
+                                /]
+                        [/#switch]
+                    [/#if]
+                [/#list]
+                [#break]
+        [/#switch]
+    [/#list]
+
     [#if deploymentSubsetRequired("s3", true)]
 
         [#if _context.Policy?has_content ]
@@ -398,6 +462,7 @@
             encrypted=solution.Encryption.Enabled
             encryptionSource=solution.Encryption.EncryptionSource
             kmsKeyId=kmsKeyId
+            inventoryReports=inventoryReports
             dependencies=dependencies
         /]
     [/#if]

@@ -295,6 +295,39 @@
     ]
 [/#function]
 
+[#function getS3InventoryReportConfiguration
+    inventoryId
+    inventoryFormat
+    destinationBucketArn
+    scheduleFrequency
+    sourcePrefix=""
+    destinationPrefix=""
+    includeVersions=false
+    ]
+
+    [#return
+        {
+            "Destination" : {
+                "BucketAccountId" : accountObject.ProviderId,
+                "BucketArn" : getArn(destinationBucketArn),
+                "Format" : inventoryFormat
+            } +
+            attributeIfContent(
+                "Prefix",
+                destinationPrefix
+            ),
+            "Enabled" : true,
+            "Id" : inventoryId,
+            "IncludedObjectVersions" : includeVersions?then("All", "Current"),
+            "ScheduleFrequency" : scheduleFrequency
+        } +
+        attributeIfContent(
+            "Prefix",
+            sourcePrefix
+        )
+    ]
+[/#function]
+
 [#assign S3_OUTPUT_MAPPINGS =
     {
         REFERENCE_ATTRIBUTE_TYPE : {
@@ -335,6 +368,7 @@
                         replicationConfiguration={}
                         cannedACL=""
                         CORSBehaviours=[]
+                        inventoryReports=[]
                         dependencies=""
                         outputId=""]
 
@@ -474,6 +508,10 @@
                 "BucketEncryption",
                 encrypted,
                 bucketEncryptionConfig
+            ) +
+            attributeIfContent(
+                "InventoryConfigurations",
+                inventoryReports
             )
         tags=getCfTemplateCoreTags("", tier, component, "", false, false, 7)
         outputs=S3_OUTPUT_MAPPINGS
