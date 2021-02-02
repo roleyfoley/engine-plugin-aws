@@ -55,5 +55,5 @@ hamlet test generate --directory "${TEST_OUTPUT_DIR}" -o "${TEST_OUTPUT_DIR}/tes
 
 pushd $(pwd)
 cd "${TEST_OUTPUT_DIR}"
-hamlet test run --pytest-args "--junitxml=${TEST_OUTPUT_DIR}/junit.xml" -t "./test_templates.py"
+hamlet test run --pytest-args "--junitxml=junit.xml" -t "./test_templates.py"
 popd
