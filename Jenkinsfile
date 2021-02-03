@@ -4,7 +4,7 @@ def slackChannel = '#devops-framework'
 
 pipeline {
     options {
-        durabilityHint('PERFORMANCE_OPTIMIZED')
+        timeout(time: 2, unit: 'HOURS')
     }
 
     agent {
