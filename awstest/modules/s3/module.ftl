@@ -127,9 +127,7 @@
                         "s3replicaext" : {
                             "externalservice" : {
                                 "Instances" : {
-                                    "default" : {
-                                        "deployment:Unit" : "aws-s3-replication-external"
-                                    }
+                                    "default" : {}
                                 },
                                 "Profiles" : {
                                     "Placement" : "external"
