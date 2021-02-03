@@ -73,7 +73,7 @@
                                 }
                             },
                             "Output" : [
-                                "mqBrokerXappXqueuehostbaseXurl",
+                                "mqBrokerXappXqueuehostbaseXdns",
                                 "securityGroupXmqBrokerXappXqueuehostbase",
                                 "secretXappXqueuehostbaseXroot"
                             ]

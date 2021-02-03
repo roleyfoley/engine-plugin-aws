@@ -4,7 +4,7 @@ def slackChannel = '#devops-framework'
 
 pipeline {
     options {
-        durabilityHint('PERFORMANCE_OPTIMIZED')
+        timeout(time: 2, unit: 'HOURS')
     }
 
     agent {
@@ -15,11 +15,17 @@ pipeline {
         stage('Run AWS Template Tests') {
             environment {
                 GENERATION_PLUGIN_DIRS="${WORKSPACE}"
+                TEST_OUTPUT_DIR='./hamlet_tests'
             }
             steps {
                 sh '''#!/usr/bin/env bash
                     ./test/run_aws_template_tests.sh
                 '''
+            }
+            post {
+                always {
+                    junit 'hamlet_tests/junit.xml'
+                }
             }
         }
 

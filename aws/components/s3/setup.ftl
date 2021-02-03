@@ -233,8 +233,12 @@
                 [#case EXTERNALSERVICE_COMPONENT_TYPE ]
                     [#switch linkRole ]
                         [#case "replicadestination" ]
+                            [#local replicationEnabled = true]
+                            [#local versioningEnabled = true]
+
                             [#local replicationDestinationAccountId = linkTargetAttributes["ACCOUNT_ID"]!"" ]
                             [#local replicationExternalPolicy +=   s3ReplicaDestinationPermission( linkTargetAttributes["ARN"] ) ]
+                            [#local replicationBucket = linkTargetAttributes["ARN"]]
                             [#break]
 
                         [#case "save" ]
