@@ -364,7 +364,7 @@
             [#list definitionsObject[core.Id].paths as path,pathConfig]
                 [#list pathConfig?keys as verb]
                     [#list openapiIntegrations.Patterns![] as pattern]
-                        [#if path?matches(pattern.Path) && verb?matches(pattern.Verb)]
+                        [#if path?matches( (pattern.Path)!"" ) && verb?matches( (pattern.Verb)!"" )]
                             [#if pattern.Throttling?has_content]
                                 [#local methodSettings +=
                                 [
