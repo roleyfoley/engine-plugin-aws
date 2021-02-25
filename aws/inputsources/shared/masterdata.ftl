@@ -1196,7 +1196,7 @@
     "gbl": {
       "Components": {
         "cfredirect": {
-          "Lambda": {
+          "lambda": {
             "Instances": {
               "default": {
                 "Versions": {
@@ -1394,7 +1394,7 @@
     "S3": {
       "IncludeTenant": false
     },
-    "RotateKey": true,
+    "RotateKeys": true,
     "Tiers": {
       "Order": [
         "elb",
