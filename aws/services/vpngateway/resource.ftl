@@ -164,8 +164,10 @@
                 "RekeyMarginTimeSeconds": securityProfile.Rekey.MarginTime,
                 "RekeyFuzzPercentage": securityProfile.Rekey.FuzzPercentage,
                 "ReplayWindowSize": securityProfile.ReplayWindowSize,
-                "DPDTimeoutSeconds": securityProfile.DeadPeerDetectionTimeout,
                 "IKEVersions": ikeVersions,
+
+                "DPDTimeoutSeconds": securityProfile.DeadPeerDetectionTimeout,
+                "DPDTimeoutAction" : securityProfile.DeadPeerDetectionAction,
 
                 "Phase1LifetimeSeconds": securityProfile.Phase1.Lifetime,
                 "Phase1EncryptionAlgorithms": phase1EncryptionAlgorithms,
