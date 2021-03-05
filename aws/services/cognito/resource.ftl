@@ -107,15 +107,58 @@
     ]
 [/#function]
 
-[#function getUserPoolSchemaObject name, datatype, mutable, required]
+[#function getUserPoolSchemaObject name datatype mutable required constraints ]
+
+    [#local schema =
+        {
+            "Name" : name,
+            "AttributeDataType" : datatype,
+            "Mutable" : mutable,
+            "Required" : required
+        }]
+
+    [#switch datatype?lower_case ]
+        [#case "string"]
+
+            [#if constraints.String.MinLength > 0 ]
+                [#local schema += {
+                    "StringAttributeConstraints" : {
+                        "MinLength" : (constraints.String.MinLength)?c
+                    }
+                }]
+            [/#if]
+
+            [#if constraints.String.MaxLength > 0 ]
+                [#local schema += {
+                    "StringAttributeConstraints" : {
+                        "MaxLength" : (constraints.String.MaxLength)?c
+                    }
+                }]
+            [/#if]
+            [#break]
+
+        [#case "number"]
+            [#if ((constraints.Number.MinValue)!"")?has_content ]
+                [#local schema += {
+                    "StringAttributeConstraints" : {
+                        "MinValue" : (constraints.Number.MinValue)?c
+                    }
+                }]
+            [/#if]
+
+            [#if ((constraints.Number.MaxValue)!"")?has_content ]
+                [#local schema += {
+                    "StringAttributeConstraints" : {
+                        "MaxValue" : (constraints.Number.MaxValue)?c
+                    }
+                }]
+            [/#if]
+            [#break]
+    [/#switch]
+
     [#return
         [
-            {
-                "Name" : name,
-                "AttributeDataType" : datatype,
-                "Mutable" : mutable,
-                "Required" : required
-            }
+            schema
         ]
     ]
 [/#function]

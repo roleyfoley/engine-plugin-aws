@@ -173,7 +173,8 @@
                             key,
                             schemaAttribute.DataType,
                             schemaAttribute.Mutable,
-                            schemaAttribute.Required
+                            schemaAttribute.Required,
+                            schemaAttribute.Constraints
         )]
     [/#list]
 
