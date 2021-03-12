@@ -154,6 +154,13 @@
                 }]
             [/#if]
             [#break]
+
+        [#default]
+            [@fatal
+                message="Unexpected data type for cognito userpool schema attribute constraints"
+                context=datatype
+            /]
+            [#break]
     [/#switch]
 
     [#return
