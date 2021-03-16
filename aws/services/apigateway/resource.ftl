@@ -16,7 +16,7 @@
 
 [@addCWMetricAttributes
     resourceType=AWS_APIGATEWAY_RESOURCE_TYPE
-    Namespace="AWS/ApiGateway"
+    namespace="AWS/ApiGateway"
     dimensions={
         "ApiName" : {
             "ResourceProperty" : "Name"

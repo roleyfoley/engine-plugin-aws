@@ -79,9 +79,8 @@
     namespace="AWS/ELB"
     dimensions={
         "LoadBalancerName" : {
-                "Output" : {
-                    "Attribute" : REFERENCE_ATTRIBUTE_TYPE
-                }
+            "Output" : {
+                "Attribute" : REFERENCE_ATTRIBUTE_TYPE
             }
         }
     }
@@ -122,7 +121,7 @@
             }
         },
         "TargetGroup" : {
-            "Output" :{
+            "Output" : {
                 "Attribute" : NAME_ATTRIBUTE_TYPE
             }
         }
